@@ -1,0 +1,3 @@
+opencv-python>=4.4.0.42
+opencv-contrib-python>=4.4.0.42
+torch>=1.4.0
