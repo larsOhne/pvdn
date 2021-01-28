@@ -15,7 +15,7 @@ setup(
     packages=['pvdn', 'pvdn.filters'],
     url='https://github.com/larsOhne/pvdn',
     license='Creative Commons Legal Code ',
-    author='Lars Ohnemus, Lukas Ewecker, Ebubekir Asan, Sascha Saralajew',
+    author='Lars Ohnemus, Lukas Ewecker, Ebubekir Asan, Stefan Roos, Simon Isele, Jakob Ketterer, Leopold Müller, and Sascha Saralajew',
     author_email='',
     description='Tools for working with the PVDN dataset.',
     install_requires=install_requires
