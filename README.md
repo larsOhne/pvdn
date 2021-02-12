@@ -1,5 +1,5 @@
 # PVDN
-![alt text](https://github.com/larsOhne/pvdn/PVDN Logo cut.png?raw=true)
+![alt text](https://github.com/larsOhne/pvdn/PVDN Logo cut.png)
 Pytorch implementation of the PVDN dataset.
 
 ## Scope
