@@ -14,6 +14,11 @@ For advanced driver assistance systems, it is crucial to have information about 
 
 [2] Lars Ohnemus, Lukas Ewecker, Ebubekir Asan, Stefan Roos, Simon Isele, Jakob Ketterer, Leopold Müller, and Sascha Saralajew: **Provident Vehicle Detection at Night: The PVDN Dataset.** [arXiv:2012.15376](https://arxiv.org/abs/2012.15376), 2020.
 
+## How-Tos
+
+- [Train the model](pvdn/detection/)
+- [Test the model](pvdn/detection/)
+
 ## Citation
     @misc{ohnemus2020provident,
       title={Provident Vehicle Detection at Night: The PVDN Dataset}, 

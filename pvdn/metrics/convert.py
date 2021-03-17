@@ -22,20 +22,22 @@ def gt_to_results_format(gt_bbox_dir):
             annots = json.load(f)
         boxes = np.array(annots["bounding_boxes"])
         labels = np.array(annots["labels"])
-        boxes = np.delete(boxes, np.where(labels == 0), axis=0)
+        output_dict[str(id)] = {}
+        output_dict[str(id)]["boxes"] = boxes.tolist()
+        output_dict[str(id)]["scores"] = labels.tolist()
 
-        output_dict[str(id)] = boxes.tolist()
     return output_dict
 
 
-def coco_to_results_format(coco_path: str, output_path: str, conf_thresh: float = 0.5):
+def coco_to_results_format(coco_path: str, output_path: str, coco_img_size: tuple = (960, 960)) -> \
+        None:
     """
+    TODO: make compliant with results_to_coco function!!
     Converts the results saved in the coco detection results format to the format used in the
     custom bounding box evaluation metric.
     :param coco_path: Path of the coco .json file -> str
     :param output_path: Path under which the final results file has to be saved. -> str
-    :param conf_thresh: Confidence threshold at which a prediction is supposed to be interpreted
-    as valid -> float
+    :param coco_img_size: Size of the images originally used. -> tuple
     """
     if not os.path.splitext(output_path)[-1] == ".json":
         raise AttributeError(f"The output path extension should be .json, not "
@@ -51,27 +53,41 @@ def coco_to_results_format(coco_path: str, output_path: str, conf_thresh: float 
         preds = json.load(f)
     eodan_format = {}
     fault_counter = True
+    h_orig, w_orig = coco_img_size
     for pred in tqdm(preds):
         fault_counter = False
-        k = pred["image_id"]
-        if pred["score"] > conf_thresh:
-            bbox = np.array(pred["bbox"])
-            bbox[2:] += bbox[:2]
-            bbox[0] = (bbox[0] / 960) * 1280
-            bbox[2] = (bbox[2] / 960) * 1280
-            if k in eodan_format.keys():
-                eodan_format[k].append(bbox.tolist())
-            else:
-                eodan_format[k] = [bbox.tolist()]
+        k = str(pred["image_id"])
+        bbox = np.array(pred["bbox"])
+        bbox[2:] += bbox[:2]
+        bbox[0] = (bbox[0] / w_orig) * 1280
+        bbox[2] = (bbox[2] / w_orig) * 1280
+        bbox[1] = (bbox[1] / h_orig) * 960
+        bbox[3] = (bbox[3] / h_orig) * 960
+        if k in eodan_format.keys():
+            eodan_format[k]["boxes"].append(bbox.tolist())
+            eodan_format[k]["scores"].append(pred["score"])
         else:
-            if not k in eodan_format.keys():
-                eodan_format[k] = []
+            eodan_format[k] = {"boxes": [bbox.tolist()], "scores": [pred["score"]]}
 
     if fault_counter:
         warn(f"There were no predictions found in the provided file {coco_path}.")
 
     with open(os.path.abspath(output_path), "w") as f:
         json.dump(eodan_format, f)
+
+
+def result_to_coco_format(results: dict) -> list:
+    """
+    TODO: provide parameter description
+    """
+    coco_preds = []
+    for id, items in results.items():
+        for bbox, score in zip(items["boxes"], items["scores"]):
+            bbox = np.array(bbox)
+            bbox[2:] = bbox[2:] - bbox[:2]
+            coco_preds.append({"image_id": id, "category_id": 0,
+                               "bbox": bbox.tolist(), "score": score})
+    return coco_preds
 
 
 if __name__ == "__main__":
@@ -85,7 +101,11 @@ if __name__ == "__main__":
     #         yolo_to_eodan(data_path, output_path)
     # print("Done!")
 
-    out = gt_to_results_format(path="/media/lukas/empty/EODAN_Dataset/day/test/labels"
-                                    "/bounding_boxes")
-    with open("gt_test_results.json", "w") as f:
-        json.dump(out, f)
+    # out = gt_to_results_format(gt_bbox_dir="/media/lukas/empty/EODAN_Dataset/day/test/labels"
+    #                                 "/bounding_boxes")
+    # with open("/media/lukas/empty/EODAN_Dataset/results/gt_test_results.json", "w") as f:
+    #     json.dump(out, f)
+
+    preds = "/media/lukas/empty/EODAN_Dataset/results/yolov5x/test/119_predictions.json"
+    coco_to_results_format(preds,
+                           "/media/lukas/empty/EODAN_Dataset/results/yolov5x/test/119_eodan.json")

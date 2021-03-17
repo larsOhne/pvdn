@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import os
 from warnings import warn
+import argparse
 
 from pvdn import PVDNDataset
 
@@ -12,16 +13,18 @@ class BoundingBoxEvaluator():
     """
     Class which helps to evaluate the results on the PVDN dataset when predicting bounding boxes.
     """
-    def __init__(self, dataset: PVDNDataset):
+    # TODO: Add coco metric
+    def __init__(self, data_dir: str):
         """
-        :param dataset: PVDNDataset object containing the ground truth annotations.
+        :param data_dir: Path to dataset; must be serializable by PVDNDataset class -> str
         """
-        if not isinstance(dataset, PVDNDataset):
-            raise TypeError(f"Dataset has to be of type {PVDNDataset}, not {type(dataset)}.")
+        data_dir = os.path.abspath(data_dir)
+        dataset = PVDNDataset(data_dir)
         self._predictions = None
         self.gt_kps = {}
         self._nbr_images = len(dataset.img_idx)
-        print("Indexing keypoint annotations...")
+
+        # indexing keypoint annotations
         for i in dataset.img_idx:
             kp_path = os.path.join(dataset.keypoints_path, "{:06d}.json".format(i))
             with open(kp_path, "r") as kp_file:
@@ -30,12 +33,17 @@ class BoundingBoxEvaluator():
                 for vehicle_annot in kp_dict["annotations"]:
                     kps += [inst["pos"] for inst in vehicle_annot["instances"]]
                 self.gt_kps[i] = kps
-        print("...done!\n")
 
     def load_results_from_file(self, path: str) -> None:
         """
         Results are loaded from .json file with the structure:
-        {"image_id": [[x1, y1, x2, y2], [...], ...], ...}
+        {"image_id":
+            {
+            "boxes": [nbr_boxes, 4]},
+            "scores": [nbr_boxes]
+            }
+        }
+        Each bounding box is saved as [x1, y1, x2, y2].
         :param path: path to the .json results file.
         """
         if not os.path.splitext(path)[-1]:
@@ -48,14 +56,21 @@ class BoundingBoxEvaluator():
     def load_results_from_dict(self, results: dict) -> None:
         """
         Results are loaded from a dict with the structure:
-        {"image_id": [[x1, y1, x2, y2], [...], ...], ...}
+        {"image_id":
+            {
+            "boxes": [nbr_boxes, 4]},
+            "scores": [nbr_boxes]
+            }
+        }
+        Each bounding box is saved as [x1, y1, x2, y2].
         :param results: Dictionary containing the results.
         """
         self._predictions = results
         if len(self._predictions.items()) == 0:
             warn(f"Results are empty. You might want to check your results dict.")
 
-    def _kp_in_box(self, kp: [np.ndarray, list], box: [np.ndarray, list], tolerance: float = 0.0) \
+    @staticmethod
+    def _kp_in_box(kp: [np.ndarray, list], box: [np.ndarray, list], tolerance: float = 0.0) \
             -> bool:
         """
         Checks if a keypoint lies within a bounding box. The height & width of the bounding box
@@ -63,6 +78,7 @@ class BoundingBoxEvaluator():
         :param kp: Keypoint which has to be checked in form of an array [x, y] -> np.ndarray
         :param box: Bounding box to be checked in form of an array [x1, y1, x2, y2] -> np.ndarray
         :param tolerance: Scale factor to extend the bounding box width and height
+        :return: bool whether the keypoint lies within the bounding box or not.
         """
         tolerance /= 2
         height = (box[3] - box[1]) * tolerance
@@ -103,7 +119,7 @@ class BoundingBoxEvaluator():
                            np.bitwise_and(boxes[:, 1] <= kp[1], kp[1] <= boxes[:, 3]))
         )
 
-    def evaluate(self, verbose=False) -> dict:
+    def evaluate(self, conf_thresh=0.5, verbose=False) -> dict:
         """
         Evaluates the results based on the cool PVDN metric for bounding box prediction. If an
         image from the dataset is not present in the result dict it is treated as if there was no
@@ -120,17 +136,24 @@ class BoundingBoxEvaluator():
         if self._predictions is None:
             raise ValueError("You need to load the results first by calling the "
                              "load_results_from_file or load_results_from_dict function.")
+        try:
+            filtered_predictions = {k: np.delete(np.array(v["boxes"]),
+                                    np.where(np.array(v["scores"])<=conf_thresh), axis=0)
+                                    for k, v in self._predictions.items()}
+        except:
+            filtered_predictions = self._predictions.copy()
 
         no_key_counter = 0
-        box_quality = []
-        kp_quality = []
-        for id, kps in tqdm(self.gt_kps.items(), disable=not verbose):
+        box_quality_hist = []
+        kp_quality_hist = []
+        for id, kps in tqdm(self.gt_kps.items(), disable=not verbose, desc="Evaluating bounding "
+                                                                           "box metrics"):
             kps = np.array(kps)
 
             img_scores = {"tps": 0, "boxes": 0, "kps": 0, "fps": 0, "fns": 0}
 
-            if str(id) in self._predictions.keys():
-                pred_boxes = np.array(self._predictions[str(id)])
+            if str(id) in filtered_predictions.keys():
+                pred_boxes = np.array(filtered_predictions[str(id)])
             else:
                 pred_boxes = []
                 no_key_counter += 1
@@ -146,7 +169,7 @@ class BoundingBoxEvaluator():
                 else:
                     # goal: exactly one kp in each box
                     # box quality is lower the more kps there are in one box
-                    box_quality.append(1 / nbr_kps_in_box)
+                    box_quality_hist.append(1 / nbr_kps_in_box)
 
             # second check every kp
             # penalize if one kp lies in several boxes
@@ -161,21 +184,36 @@ class BoundingBoxEvaluator():
                     img_scores["tps"] += 1
                     # goal: each kp lies in only one box
                     # quality is lower the more boxes the kp lies in
-                    kp_quality.append(1 / nbr_boxes_containing_kp)
+                    kp_quality_hist.append(1 / nbr_boxes_containing_kp)
 
             self._total_scores = {k: v + self._total_scores[k] for k, v in img_scores.items()}
 
-        nds = 3
+        nds = 4
         # now we have TPs, FPs, and FNs and can calculate precision & recall
-        precision = round(self._total_scores["tps"] / (self._total_scores["tps"] +
-                                                      self._total_scores["fps"]), ndigits=nds)
-        recall = round(self._total_scores["tps"] / (self._total_scores["tps"] +
-                    self._total_scores["fns"]), ndigits=nds)
-        f1_score = round(self._total_scores["tps"] / (self._total_scores["tps"] + 0.5 * (
-                self._total_scores["fps"] + self._total_scores["fns"])), ndigits=nds)
+        try:
+            precision = round(self._total_scores["tps"] / (self._total_scores["tps"] +
+                                                          self._total_scores["fps"]), ndigits=nds)
+        except ZeroDivisionError:
+            precision = -1
 
-        box_quality = round(np.mean(box_quality), ndigits=nds)
-        kp_quality = round(np.mean(kp_quality), ndigits=nds)
+        try:
+            recall = round(self._total_scores["tps"] / (self._total_scores["tps"] +
+                        self._total_scores["fns"]), ndigits=nds)
+        except ZeroDivisionError:
+            recall = -1
+
+        try:
+            f1_score = round(self._total_scores["tps"] / (self._total_scores["tps"] + 0.5 * (
+                    self._total_scores["fps"] + self._total_scores["fns"])), ndigits=nds)
+        except ZeroDivisionError:
+            f1_score = -1
+
+        box_quality = round(np.mean(box_quality_hist), ndigits=nds)
+        box_quality_std = round(np.std(box_quality_hist), ndigits=nds)
+
+        kp_quality = round(np.mean(kp_quality_hist), ndigits=nds)
+        kp_quality_std = round(np.std(kp_quality_hist), ndigits=nds)
+
         box_quality_combined = round(box_quality * kp_quality, ndigits=nds)
 
         if verbose:
@@ -184,7 +222,9 @@ class BoundingBoxEvaluator():
             print(f"Precision:\t\t{precision}\n"
                   f"Recall:\t\t\t{recall}\n"
                   f"F1 Score:\t\t{f1_score}\n"
-                  f"Box Quality:\t{box_quality_combined}")
+                  f"Box Quality:\t\t{box_quality_combined}\n"
+                  f"q_b:\t\t\t{box_quality} +- {box_quality_std}\n"
+                  f"q_k:\t\t\t{kp_quality} +- {kp_quality_std}")
             print("----------------------------------")
 
         return {"precision": precision, "recall": recall, "f1_score": f1_score,
@@ -192,8 +232,7 @@ class BoundingBoxEvaluator():
 
 
 def evaluate_single(src, dataset_path):
-    dataset = PVDNDataset(path=dataset_path)
-    evaluator = BoundingBoxEvaluator(dataset=dataset)
+    evaluator = BoundingBoxEvaluator(data_dir=dataset_path)
     evaluator.load_results_from_file(src)
     evaluator.evaluate(verbose=True)
 
@@ -227,11 +266,15 @@ def find_best(src, file_pattern, dataset_path):
 
 
 if __name__ == "__main__":
-
-    src = "/media/lukas/empty/EODAN_Dataset/results/custom/test"
-    pattern = ".json"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--result_file", type=str, help=".json file containing the results.",
+                        default="/media/lukas/empty/EODAN_Dataset/results/gt_test_results.json")
+    parser.add_argument("--dataset_path", type=str, help="Path to the dataset split.",
+                        default="/media/lukas/empty/EODAN_Dataset/day/test")
+    args = parser.parse_args()
+    # src = "/media/lukas/empty/EODAN_Dataset/results/custom/test"
+    # pattern = ".json"
     # dataset_path = "/media/lukas/empty/EODAN_Dataset/day/val"
     dataset_path = "/media/lukas/empty/EODAN_Dataset/day/test"
     # find_best(src, pattern, dataset_path)
-    evaluate_single("/media/lukas/empty/EODAN_Dataset/results/gt_test_results.json",
-                    dataset_path)
+    evaluate_single(args.result_file, args.dataset_path)

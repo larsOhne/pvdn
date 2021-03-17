@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# this produces the image_operations.so shared library which can be loaded into Python
+g++ -fpic -shared -o image_operations.so image_operations.cpp HeadLampObject.cpp
