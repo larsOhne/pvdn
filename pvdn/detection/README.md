@@ -77,3 +77,33 @@ Note: The data has to be provided in the format as presented on kaggle.
 
 
 In order to save the prediction results also in the coco format, use the `--save_coco` flag. If you want to visualize and save the prediction of certain scenes (say scene 23 and scene 96), you can pass them simply as a list like this: `--plot_scenes 23 96`. It will save them to your specified output directory.
+
+
+## Working with YoloV5
+
+You can reproduce the results from the YoloV5s and YoloV5x networks. For that, you first need to 
+convert the original PVDN dataset structure into the YoloV5 compatible structure. You can do 
+this by using the script `pvdn_to_yolo.py`, located in the `pvdn/detection/scripts/` directory. 
+To avoid dependency issues, you best do this also in the provided Docker environment.
+
+Example:
+```
+cd pvdn/detection/scripts
+python3 pvdn_to_yolo.py -source_dir /path/to/dataset/day 
+    -target_dir /data/yolo_day -img_size 960
+```
+
+The `-img_size` parameter specifies the image size to which the images are resized. The YoloV5 
+implementation expects the images to be square, so the images will be resized to *img_size x 
+img_size*.
+
+Once you converted the file structure, you can use the train and test scripts provided in the 
+original YoloV5 implementation [here](https://github.com/ultralytics/yolov5). The pretrained 
+weights for both YoloV5s (`weights_yolov5s_pretrained.pt`) and YoloV5x 
+(`weights_yolov5x_pretrained.pt`) can be found in this repo in the directory 
+`pvdn/detection/`, which can be used in the training and test scripts provided in the original 
+YoloV5 repository.
+
+The YoloV5 training and test scripts generate the predictions in the coco format. You can 
+convert them to the PVDN format by using the function `coco_to_results_format()` provided in 
+`pvdn/metrics/convert.py` (please find the description of how to use the function in the code).
