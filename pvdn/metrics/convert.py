@@ -29,19 +29,23 @@ def gt_to_results_format(gt_bbox_dir):
     return output_dict
 
 
-def coco_to_results_format(coco_path: str, output_path: str, coco_img_size: tuple = (960, 960)) -> \
-        None:
+def coco_to_results_format(coco_path: str, output_path: str = None,
+                           coco_img_size: tuple = (960, 960)) -> None:
     """
-    TODO: make compliant with results_to_coco function!!
     Converts the results saved in the coco detection results format to the format used in the
     custom bounding box evaluation metric.
     :param coco_path: Path of the coco .json file -> str
-    :param output_path: Path under which the final results file has to be saved. -> str
-    :param coco_img_size: Size of the images originally used. -> tuple
+    :param output_path: Path under which the final results file has to be saved. If no path is
+        provided, the result format is returned as a dictionary. -> str
+    :param coco_img_size: Size of the images which were used to generate the results in the coco
+        file. -> tuple
+    :return: None, if the output path is specified. If the output path is not specified, the
+        result format is returned as a dictionary.
     """
-    if not os.path.splitext(output_path)[-1] == ".json":
-        raise AttributeError(f"The output path extension should be .json, not "
-                             f"{os.path.splitext(output_path)[-1]}.")
+    if output_path:
+        if not os.path.splitext(output_path)[-1] == ".json":
+            raise AttributeError(f"The output path extension should be .json, not "
+                                 f"{os.path.splitext(output_path)[-1]}.")
     if not os.path.isfile(coco_path):
         raise FileNotFoundError(f"File {coco_path} does not exist.")
     if not os.path.splitext(coco_path)[-1] == ".json":
@@ -51,7 +55,7 @@ def coco_to_results_format(coco_path: str, output_path: str, coco_img_size: tupl
     coco_path = os.path.abspath(coco_path)
     with open(coco_path, "r") as f:
         preds = json.load(f)
-    eodan_format = {}
+    pvdn_format = {}
     fault_counter = True
     h_orig, w_orig = coco_img_size
     for pred in tqdm(preds):
@@ -63,17 +67,20 @@ def coco_to_results_format(coco_path: str, output_path: str, coco_img_size: tupl
         bbox[2] = (bbox[2] / w_orig) * 1280
         bbox[1] = (bbox[1] / h_orig) * 960
         bbox[3] = (bbox[3] / h_orig) * 960
-        if k in eodan_format.keys():
-            eodan_format[k]["boxes"].append(bbox.tolist())
-            eodan_format[k]["scores"].append(pred["score"])
+        if k in pvdn_format.keys():
+            pvdn_format[k]["boxes"].append(bbox.tolist())
+            pvdn_format[k]["scores"].append(pred["score"])
         else:
-            eodan_format[k] = {"boxes": [bbox.tolist()], "scores": [pred["score"]]}
+            pvdn_format[k] = {"boxes": [bbox.tolist()], "scores": [pred["score"]]}
 
     if fault_counter:
         warn(f"There were no predictions found in the provided file {coco_path}.")
 
-    with open(os.path.abspath(output_path), "w") as f:
-        json.dump(eodan_format, f)
+    if output_path:
+        with open(os.path.abspath(output_path), "w") as f:
+            json.dump(pvdn_format, f)
+    else:
+        return pvdn_format
 
 
 def result_to_coco_format(results: dict) -> list:
