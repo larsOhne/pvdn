@@ -97,12 +97,13 @@ The `-img_size` parameter specifies the image size to which the images are resiz
 implementation expects the images to be square, so the images will be resized to *img_size x 
 img_size*.
 
-Once you converted the file structure, you can use the train and test scripts provided in the 
-original YoloV5 implementation [here](https://github.com/ultralytics/yolov5). The pretrained 
-weights for both YoloV5s (`weights_yolov5s_pretrained.pt`) and YoloV5x 
-(`weights_yolov5x_pretrained.pt`) can be found in this repo in the directory 
-`pvdn/detection/`, which can be used in the training and test scripts provided in the original 
-YoloV5 repository.
+Next, you need to download the pretrained weights from this link:
+```
+https://drive.google.com/drive/folders/1DcajTkJKL3np81m6f7rfXddg2XYc0nF7?usp=sharing
+```
+
+Once you converted the file structure and downloaded the weights, you can use the train and test scripts provided in the 
+original YoloV5 implementation [here](https://github.com/ultralytics/yolov5).
 
 The YoloV5 training and test scripts generate the predictions in the coco format. You can 
 convert them to the PVDN format by using the function `coco_to_results_format()` provided in 
