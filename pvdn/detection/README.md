@@ -66,7 +66,7 @@ checkpoint path via the `--model_path` parameter.
 
 ## Testing the model
 
-In order to test the model, simply navigate into the detction directory and run the `test.py` script:
+In order to test the model, simply navigate into the detection directory and run the `test.py` script:
 
 ```
 cd pvdn/detection/
@@ -89,8 +89,7 @@ To avoid dependency issues, you best do this also in the provided Docker environ
 Example:
 ```
 cd pvdn/detection/scripts
-python3 pvdn_to_yolo.py -source_dir /path/to/dataset/day 
-    -target_dir /data/yolo_day -img_size 960
+python3 pvdn_to_yolo.py -source_dir /path/to/dataset/day -target_dir /data/yolo_day -img_size 960
 ```
 
 The `-img_size` parameter specifies the image size to which the images are resized. The YoloV5 
@@ -99,11 +98,12 @@ img_size*.
 
 Next, you need to download the pretrained weights from this link:
 ```
-https://drive.google.com/drive/folders/1DcajTkJKL3np81m6f7rfXddg2XYc0nF7?usp=sharing
+https://drive.google.com/drive/folders/1DcajTkJKL3np81m6f7rfXddg2XYc0nF7
 ```
 
 Once you converted the file structure and downloaded the weights, you can use the train and test scripts provided in the 
-original YoloV5 implementation [here](https://github.com/ultralytics/yolov5).
+original YoloV5 implementation [here](https://github.com/ultralytics/yolov5). We
+tested our code with the version **v5.0**.
 
 The YoloV5 training and test scripts generate the predictions in the coco format. You can 
 convert them to the PVDN format by using the function `coco_to_results_format()` provided in 

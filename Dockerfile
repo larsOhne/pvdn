@@ -3,7 +3,7 @@ FROM nvidia/cuda:11.0-base
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && apt install -y sudo cmake g++ wget unzip python3-pip python3-dev python-dev \
-    ffmpeg libsm6 libxext6
+    ffmpeg libsm6 libxext6 git
 
 
 RUN mkdir -p ~/opencv cd ~/opencv && \
