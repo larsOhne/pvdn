@@ -98,6 +98,9 @@ class Cblob(object):
         final_proposals = np.delete(final_proposals, np.where(final_proposals == -1))
         final_proposals = final_proposals.reshape((-1, 4))
 
+        # to shift from pixel to index representation
+        final_proposals -= 1
+
         return final_proposals
 
 

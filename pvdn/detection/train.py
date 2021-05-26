@@ -173,6 +173,10 @@ def train(train_data, val_data, epochs, lr, bs, conf_thresh=0.5, output_dir=None
                         torch.save(ckp, os.path.join(output_dir, "checkpoints", f"best_{k}.pt"))
 
         if save_epochs:
+            if not os.path.isdir(os.path.join(output_dir, "checkpoints")):
+                os.mkdir(os.path.join(output_dir, "checkpoints"))
+            if not os.path.isdir(os.path.join(output_dir, "predictions")):
+                os.mkdir(os.path.join(output_dir, "prediction"))
             torch.save(ckp, os.path.join(output_dir, "checkpoints", f"ckp_epoch_{epoch}.pt"))
             with open(os.path.join(output_dir, "predictions", f"val_predictions_epoch_"
                       f"{epoch}.json"), "w") as f:

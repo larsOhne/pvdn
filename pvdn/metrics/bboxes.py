@@ -267,14 +267,7 @@ def find_best(src, file_pattern, dataset_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--result_file", type=str, help=".json file containing the results.",
-                        default="/media/lukas/empty/EODAN_Dataset/results/gt_test_results.json")
-    parser.add_argument("--dataset_path", type=str, help="Path to the dataset split.",
-                        default="/media/lukas/empty/EODAN_Dataset/day/test")
+    parser.add_argument("--result_file", type=str, help=".json file containing the results.")
+    parser.add_argument("--dataset_path", type=str, help="Path to the dataset split.")
     args = parser.parse_args()
-    # src = "/media/lukas/empty/EODAN_Dataset/results/custom/test"
-    # pattern = ".json"
-    # dataset_path = "/media/lukas/empty/EODAN_Dataset/day/val"
-    dataset_path = "/media/lukas/empty/EODAN_Dataset/day/test"
-    # find_best(src, pattern, dataset_path)
     evaluate_single(args.result_file, args.dataset_path)
