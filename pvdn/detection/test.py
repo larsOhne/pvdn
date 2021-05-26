@@ -97,5 +97,6 @@ if __name__ == "__main__":
                         help="Confidence threshold at which to classify positive.")
     args = parser.parse_args()
 
-    test(args.test_path, args.conf_thresh, args.output_dir, args.model_path, args.save_coco,
+    test(args.test_data, args.conf_thresh, args.output_dir, args.model_path,
+         args.save_coco,
          args.plot_scenes, args.device, args.batch_size, args.workers)
