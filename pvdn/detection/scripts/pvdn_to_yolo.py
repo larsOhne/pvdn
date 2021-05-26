@@ -18,6 +18,23 @@ def swap_file_structure(target_dir: str, source_dir: str, img_size: int = 960):
     :param img_size: The final size of the image to be fed into the yolo network. The image will
         have to be square, so it will have the size img_size x img_size. The default value is 960.
     """
+    # paranoid checks
+    if not os.path.isdir(source_dir):
+        raise NotADirectoryError(f"{source_dir} is not a directory. Please check.")
+    if not os.path.isdir(target_dir):
+        raise NotADirectoryError(f"{target_dir} is not a directory. Please check.")
+
+    # check if the bounding box annotations have actually been created before
+    if not os.path.isdir(os.path.join(source_dir, "train/labels/bounding_boxes")) \
+        or not os.path.isdir(os.path.join(source_dir, "test/labels/bounding_boxes"))\
+        or not os.path.isdir(os.path.join(source_dir, "val/labels/bounding_boxes")):
+        raise FileNotFoundError("The bounding box annotations could not be found. "
+                                "Please check if you have generated them yet. You "
+                                "can generate them by using the "
+                                "generate_bounding_boxes() method from the "
+                                "BoundingBoxDataset class in pvdn/bboxes.py.")
+
+
     num_classes = 1
     names = ['instance']
 
