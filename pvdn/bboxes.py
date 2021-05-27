@@ -30,7 +30,7 @@ class BoundingBoxDataset(PVDNDataset):
             this parameter can be ignored and left at default None.
         :param blob_detector: Algorithm to be used for the region proposal part. If None,
             the blob detector proposed in the original paper is used. If you want to create your
-            own, please refer to the output format used in the DynamicBlobdetector class.
+            own, please refer to the output format used in the DynamicBlobDetector class.
         :param sup_mult: Support multiplier for extending the region around the proposed bounding
             boxes.
         :param box_size: Size to which each proposed bounding box is rescaled before fed into the
@@ -49,8 +49,8 @@ class BoundingBoxDataset(PVDNDataset):
                 raise TypeError(f"blob_detector has to be of type {Detector}.")
 
         self.blob_detector = blob_detector if blob_detector else \
-            DynamicBlobDetector(k=0.5, w=20, padding=5, dev_thresh=0.005, nms_distance=13)
-
+            DynamicBlobDetector(k=0.55, w=26, padding=9, dev_thresh=0.01, nms_distance=2, small_scale=None,
+                                considered_region=None)
         self.sup_mult = sup_mult
         self.box_size = box_size
         self.bounding_box_idx = []
@@ -60,18 +60,20 @@ class BoundingBoxDataset(PVDNDataset):
         self.norm_minmax = norm_minmax
         self.init_bounding_boxes()
 
-    def generate_bounding_boxes(self) -> None:
-        """Generates the bounding boxes and stores the annotation files."""
+    def generate_bounding_boxes(self, verbose=False) -> None:
+        """Generates the bounding boxes and stores the annotation files.
+        :param verbose: Flag to show progress bar. Default false.
+        """
         if not os.path.exists(self.bounding_box_path):
             os.mkdir(self.bounding_box_path)
             print(f"Created path {self.bounding_box_path}")
 
-        for idx, id in tqdm(enumerate(self.img_idx)):
+        for idx, id in tqdm(enumerate(self.img_idx), disable=not verbose):
             # print('idx: {}, id: {}'.format(idx, id))
             img, info, vehicles = super().__getitem__(idx)
 
             # extract information
-            bounding_boxes = self.detector(np.array(img))
+            bounding_boxes = self.blob_detector.propose(np.array(img))
 
             if bounding_boxes:
                 # extract keypoints from vehicles
@@ -90,28 +92,6 @@ class BoundingBoxDataset(PVDNDataset):
                 annotation = {'bounding_boxes': bounding_boxes,
                               'labels': labels}
                 json.dump(annotation, f)
-
-    def detector(self, img) -> list:
-        """
-        Calls the blob detector and proposes the bounding boxes.
-        :param img: grayscale input image of shape [h, w] and pixels in range 0-255 -> np.ndarray
-        :return: array of proposed bounding boxes of shape [nbr_boxes, 4] -> list
-        """
-
-        h, w = img.shape
-        img = img.astype('float') / 255.
-        scale = (w // 2, h // 2)
-        scale_x, scale_y = (float(w) / float(scale[0])), \
-                           (float(h) / float(scale[1]))
-        resized = cv2.resize(img, scale,
-                             interpolation=cv2.INTER_LINEAR)
-        cv2.normalize(resized, resized, 0, 1, cv2.NORM_MINMAX)
-
-        # find candidates
-        proposals = self.blob_detector.propose(resized)
-        # rescale them back to original scale
-        proposals = rescale_boxes(proposals, scale_x, scale_y)
-        return proposals
 
     def plot_scenes(self, scene_ids: list, preds: dict, output_dir: str, conf_thresh: float = 0.5):
         """
@@ -146,7 +126,6 @@ class BoundingBoxDataset(PVDNDataset):
                     # save
                     cv2.imwrite(os.path.join(scene_out_dir, f"{img_id:06d}.png"), img)
 
-
     def plot_bboxes(self, img, bboxes):
         """
         TODO: function & parameter description
@@ -175,7 +154,7 @@ class BoundingBoxDataset(PVDNDataset):
         points = points = [inst.position for vehic in vehicles for inst in vehic.instances]
         # extract information
         if extract:
-            bounding_boxes = self.detector(img)
+            bounding_boxes = self.blob_detector.propose(img)
             labels = self.label_boxes(bounding_boxes, points)
         else:
             i = 0
@@ -183,10 +162,10 @@ class BoundingBoxDataset(PVDNDataset):
                 start_idx = self.bounding_box_idx.index((idx, 0))
                 # search for all bounding_boxes of the image
                 while self.bounding_box_idx[start_idx][0] == \
-                        self.bounding_box_idx[start_idx+i][0]:
+                        self.bounding_box_idx[start_idx + i][0]:
                     i += 1
-                bounding_boxes = self.bounding_boxes[start_idx:start_idx+i]
-                labels = self.labels[start_idx:start_idx+i]
+                bounding_boxes = self.bounding_boxes[start_idx:start_idx + i]
+                labels = self.labels[start_idx:start_idx + i]
             except ValueError:
                 bounding_boxes = []
                 labels = []
@@ -254,9 +233,7 @@ class BoundingBoxDataset(PVDNDataset):
                 with open(annotation_path, 'r') as f:
                     annotations = json.load(f)
 
-
                 for bb_idx in range(len(annotations['labels'])):
-
                     # key is the continuous index starting at 0 that indexes
                     #    all bounding boxes
                     # img_idx is the continuous index starting at 0 that

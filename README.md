@@ -18,6 +18,7 @@ For advanced driver assistance systems, it is crucial to have information about 
 
 - [Train the model](pvdn/detection/)
 - [Test the model](pvdn/detection/)
+- [Optimize BlobDetector](pvdn/metrics/)
 
 ## Citation
     @misc{ohnemus2020provident,

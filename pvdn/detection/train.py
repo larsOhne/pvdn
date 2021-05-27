@@ -14,13 +14,13 @@ from tensorboardX import SummaryWriter
 from pvdn import BoundingBoxDataset
 from pvdn.detection.model.single_flow_classifier import Classifier
 from pvdn.detection.data.transforms import RandomGamma
+from pvdn.detection.model.proposals import DynamicBlobDetector
 from pvdn.detection.engine import train_one_epoch, val_one_epoch
 from pvdn.metrics.bboxes import BoundingBoxEvaluator
 
 
 def train(train_data, val_data, epochs, lr, bs, conf_thresh=0.5, output_dir=None, model_path=None, \
           device="cuda", n_workers=16, save_epochs=False):
-
     # seed for reproducibility
     torch.manual_seed(1)
     np.random.seed(1)
