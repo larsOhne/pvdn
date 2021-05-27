@@ -13,6 +13,7 @@ class BoundingBoxEvaluator():
     """
     Class which helps to evaluate the results on the PVDN dataset when predicting bounding boxes.
     """
+
     # TODO: Add coco metric
     def __init__(self, data_dir: str):
         """
@@ -119,6 +120,55 @@ class BoundingBoxEvaluator():
                            np.bitwise_and(boxes[:, 1] <= kp[1], kp[1] <= boxes[:, 3]))
         )
 
+    def quality_check(self, conf_thresh=0.5) -> dict:
+        """
+        Checks if a bounding box contains more than one keypoint and if a keypoint has an enclosing bounding box
+        :return: lists of ids of the images where the check failed
+        """
+        if self._predictions is None:
+            raise ValueError("You need to load the results first by calling the "
+                             "load_results_from_file or load_results_from_dict function.")
+        try:
+            filtered_predictions = {k: np.delete(np.array(v["boxes"]),
+                                                 np.where(np.array(v["scores"]) <= conf_thresh), axis=0)
+                                    for k, v in self._predictions.items()}
+        except:
+            filtered_predictions = self._predictions.copy()
+        nbr_kps_in_box_list = []
+        kp_in_box_list = []
+
+        # Prepares keypoints and bounding_boxes and calculates the number of keypoints in a bounding_box for every image
+        for id, kps in tqdm(self.gt_kps.items()):
+            kps = np.array(kps)
+
+            if str(id) in filtered_predictions.keys():
+                pred_boxes = np.array(filtered_predictions[str(id)])
+            else:
+                pred_boxes = []
+            for box in pred_boxes:
+                get_nbr_of_kps_in_box = self._get_nbr_of_kps_in_box(box=box, kps=kps)
+                if get_nbr_of_kps_in_box > 1:
+                    if not nbr_kps_in_box_list or nbr_kps_in_box_list[0] != id:
+                        nbr_kps_in_box_list.insert(0, id)
+
+        # Prepares keypoints and bounding boxes and returns if a keypoint has a enclosing bounding box
+        for id, kps in tqdm(self.gt_kps.items()):
+            kps = np.array(kps)
+            for kp in kps:
+                kp_in_box = False
+
+                if str(id) in filtered_predictions.keys():
+                    pred_boxes = np.array(filtered_predictions[str(id)])
+                else:
+                    pred_boxes = []
+                for box in pred_boxes:
+                    if self._kp_in_box(kp=kp, box=box):
+                        kp_in_box = True
+                if not kp_in_box:
+                    kp_in_box_list.append(id)
+
+        return {"nbr_kps_in_box_list": nbr_kps_in_box_list, "kp_in_box_list": kp_in_box_list}
+
     def evaluate(self, conf_thresh=0.5, verbose=False) -> dict:
         """
         Evaluates the results based on the cool PVDN metric for bounding box prediction. If an
@@ -138,7 +188,7 @@ class BoundingBoxEvaluator():
                              "load_results_from_file or load_results_from_dict function.")
         try:
             filtered_predictions = {k: np.delete(np.array(v["boxes"]),
-                                    np.where(np.array(v["scores"])<=conf_thresh), axis=0)
+                                                 np.where(np.array(v["scores"]) <= conf_thresh), axis=0)
                                     for k, v in self._predictions.items()}
         except:
             filtered_predictions = self._predictions.copy()
@@ -192,13 +242,13 @@ class BoundingBoxEvaluator():
         # now we have TPs, FPs, and FNs and can calculate precision & recall
         try:
             precision = round(self._total_scores["tps"] / (self._total_scores["tps"] +
-                                                          self._total_scores["fps"]), ndigits=nds)
+                                                           self._total_scores["fps"]), ndigits=nds)
         except ZeroDivisionError:
             precision = -1
 
         try:
             recall = round(self._total_scores["tps"] / (self._total_scores["tps"] +
-                        self._total_scores["fns"]), ndigits=nds)
+                                                        self._total_scores["fns"]), ndigits=nds)
         except ZeroDivisionError:
             recall = -1
 
@@ -270,4 +320,3 @@ if __name__ == "__main__":
     parser.add_argument("--result_file", type=str, help=".json file containing the results.")
     parser.add_argument("--dataset_path", type=str, help="Path to the dataset split.")
     args = parser.parse_args()
-    evaluate_single(args.result_file, args.dataset_path)
