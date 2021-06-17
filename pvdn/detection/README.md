@@ -15,26 +15,42 @@ and start a container with CUDA support via:
 docker run -it --rm --gpus all -v <path_to_dataset>:/dataset pvdn
 ``` 
 and start a container without CUDA support via:
+
 ```
 docker run -it --rm  -v <path_to_dataset>:/dataset pvdn
 ``` 
-You will initially be located in the base directory of the pvdn package and your dataset directory will also be mounted into the container.
 
-Note: If for some reason you do not want to use the Docker environment, keep in mind that you need to have OpenCV installed **and** manually compile  `image_operations.cpp` using the command `g++ -fpic -shared -o image_operations.so image_operations.cpp HeadLampObject.cpp`. Also, the project needs to be installed as a package in order to ensure proper linking between the different modules.
+You will initially be located in the base directory of the pvdn package and your dataset directory will also be mounted
+into the container.
+
+Note: If for some reason you do not want to use the Docker environment, keep in mind that you need to have OpenCV
+installed **and** manually compile  `image_operations.cpp` using the
+command `g++ -fpic -shared -o image_operations.so image_operations.cpp HeadLampObject.cpp`. Also, the project needs to
+be installed as a package in order to ensure proper linking between the different modules.
 
 ## Creating the bounding box annotations
 
-In order to generate the bounding box annotations based on the keypoints, a blob detection algorithm is used to identify the interesting parts of the images and calculate the bounding boxes. Then, a bounding box is assigned the label "1" if it contains at least one ground truth keypoint.
+In order to generate the bounding box annotations based on the keypoints, a blob detection algorithm is used to identify
+the interesting parts of the images and calculate the bounding boxes.
+(If you want to set the blob detection parameters on your own, create a .yaml file in the style
+of [BlobDetectorParameters.yaml](BlobDetectorParameters.yaml) and pass it in the following command to the
+BoundingBoxDataset.)
+
+Then, a bounding box is assigned the label "1" if it contains at least one ground truth keypoint.
 
 To automatically generate the data in the compliant format, you can do the following:
+
 ```python
 # start a python3 console
 # example for generating the bounding boxes for the day/train split
 # do this analogously for the other splits
 
 from pvdn import BoundingBoxDataset
+from pvdn.detection.model.proposals import DynamicBlobDetector
 
-dataset = BoundingBoxDataset(path="path/to/day/train")
+dataset = BoundingBoxDataset(path="path/to/day/train",
+                             blob_detector=DynamicBlobDetector.from_yaml(
+                                 "path/to/BlobDetectorParameters.yaml"))  # BlobDetector is optional
 dataset.generate_bounding_boxes()
 
 ```

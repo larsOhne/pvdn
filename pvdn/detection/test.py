@@ -11,6 +11,7 @@ from pvdn import BoundingBoxDataset
 from pvdn.metrics.bboxes import BoundingBoxEvaluator
 from pvdn.detection.model.single_flow_classifier import Classifier
 from pvdn.detection.engine import val_one_epoch
+from pvdn.detection.model.proposals import DynamicBlobDetector
 from pvdn.metrics.convert import result_to_coco_format
 
 
@@ -98,5 +99,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     test(args.test_data, args.conf_thresh, args.output_dir, args.model_path,
-         args.save_coco,
-         args.plot_scenes, args.device, args.batch_size, args.workers)
+         args.save_coco, args.plot_scenes, args.device, args.batch_size, args.workers)
