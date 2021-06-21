@@ -95,24 +95,3 @@ def result_to_coco_format(results: dict) -> list:
             coco_preds.append({"image_id": id, "category_id": 0,
                                "bbox": bbox.tolist(), "score": score})
     return coco_preds
-
-
-if __name__ == "__main__":
-    # data_dir = "/media/lukas/empty/EODAN_Dataset/results/custom/predictions"
-    # print(f"Converting for data in {data_dir}...")
-    # for yolo_file in os.listdir(data_dir):
-    #     if ".json" in yolo_file:
-    #         data_path = os.path.join(data_dir, yolo_file)
-    #         epoch = yolo_file.split(".")[0]
-    #         output_path = os.path.join(data_dir, f"{epoch}_eodan.json")
-    #         yolo_to_eodan(data_path, output_path)
-    # print("Done!")
-
-    # out = gt_to_results_format(gt_bbox_dir="/media/lukas/empty/EODAN_Dataset/day/test/labels"
-    #                                 "/bounding_boxes")
-    # with open("/media/lukas/empty/EODAN_Dataset/results/gt_test_results.json", "w") as f:
-    #     json.dump(out, f)
-
-    preds = "/media/lukas/empty/EODAN_Dataset/results/yolov5x/test/119_predictions.json"
-    coco_to_results_format(preds,
-                           "/media/lukas/empty/EODAN_Dataset/results/yolov5x/test/119_eodan.json")
