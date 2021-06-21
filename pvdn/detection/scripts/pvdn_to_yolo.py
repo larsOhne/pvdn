@@ -18,6 +18,9 @@ def swap_file_structure(target_dir: str, source_dir: str, img_size: int = 960):
     :param img_size: The final size of the image to be fed into the yolo network. The image will
         have to be square, so it will have the size img_size x img_size. The default value is 960.
     """
+    target_dir = os.path.abspath(target_dir)
+    os.makedirs(target_dir, exist_ok=True)
+
     # paranoid checks
     if not os.path.isdir(source_dir):
         raise NotADirectoryError(f"{source_dir} is not a directory. Please check.")
@@ -46,10 +49,6 @@ def swap_file_structure(target_dir: str, source_dir: str, img_size: int = 960):
         "names": names
     }
 
-    target_dir = os.path.abspath(target_dir)
-    if not os.path.exists(target_dir):
-        os.mkdir(target_dir)
-
     # create .yaml file required for yolo training
     yaml_dir = os.path.join(target_dir, 'pvdn.yaml')
     print(f"Creating yolo .yaml file at {yaml_dir}...")
@@ -66,8 +65,7 @@ def swap_file_structure(target_dir: str, source_dir: str, img_size: int = 960):
         if not os.path.isdir(source_path):
             warn(f"{source_path} does not exist or is not a directory. Skipping the {split} split.")
             continue
-        if not os.path.exists(target_path):
-            os.mkdir(target_path)
+        os.makedirs(target_path, exist_ok=True)
 
         print(f"Copying {split} images to {target_path}.")
         scenes_dir = os.path.join(source_path, "images")
