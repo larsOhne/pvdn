@@ -138,12 +138,12 @@ the training results as follows:
 
 *YoloV5s*
 ```
-python3 train.py --weights yolov5s.pt --data /data/yolo_day/pvdn.yaml --img-size 960 --hyp data/hyp.finetune.yaml --single-cls --workers 8 --name pvdn_yolov5s --batch-size 16 --epochs 200 --conf-thres 0.5
+python3 train.py --weights yolov5s.pt --data /data/yolo_day/pvdn.yaml --img-size 960 --hyp data/hyp.finetune.yaml --single-cls --workers 8 --name pvdn_yolov5s --batch-size 16 --epochs 200
 ```
 
 *Yolov5x*
 ```
-python3 train.py --weights yolov5x.pt --data /data/yolo_day/pvdn.yaml --img-size 960 --hyp data/hyp.finetune.yaml --single-cls --workers 8 --name pvdn_yolov5x --batch-size 16 --epochs 200 --conf-thres 0.5
+python3 train.py --weights yolov5x.pt --data /data/yolo_day/pvdn.yaml --img-size 960 --hyp data/hyp.finetune.yaml --single-cls --workers 8 --name pvdn_yolov5x --batch-size 16 --epochs 200
 ```
 
 You can also download the pretrained weights:
