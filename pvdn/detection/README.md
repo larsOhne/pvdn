@@ -93,3 +93,13 @@ Note: The data has to be provided in the format as presented on kaggle.
 
 
 In order to save the prediction results also in the coco format, use the `--save_coco` flag. If you want to visualize and save the prediction of certain scenes (say scene 23 and scene 96), you can pass them simply as a list like this: `--plot_scenes 23 96`. It will save them to your specified output directory.
+
+
+## Visualize tracking results
+
+The results of the proposed tracker can be visualized by the main function of `model/tracker.py`. For that the path to a folder with a sequence of images and the correspoding annotations has to be provided:
+```
+cd pvdn/detection/model
+python3 tracker.py --image_path /pvdn_dataset/day/val/images/S00121 --bounding_box_path /pvdn_dataset/day/val/labels/bounding_boxes
+```
+The main function opens for each image a cv2 figure. **The current figure must be closed by pressing ESC.** After that the next image of the sequence is visualized.
