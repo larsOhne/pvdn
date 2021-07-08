@@ -100,7 +100,8 @@ def train(train_data, val_data, epochs, lr, bs, conf_thresh=0.5, output_dir=None
                                                      patience=5,
                                                      verbose=True)
 
-    if model_path:
+    if model_path is not None:
+        print(model_path)
         ckp = torch.load(model_path)
         print("Initialized model from checkpoint.")
         if not "model" in ckp.keys():
@@ -220,7 +221,6 @@ if __name__ == "__main__":
                         help="Confidence threshold at which to classify positive.")
     args = parser.parse_args()
 
-    args.model_path = "weights_pretrained.pt"
     train(args.train_data, args.val_data, args.epochs, args.lr, args.batch_size, args.conf_thresh,
           args.output_dir, args.model_path, n_workers=args.workers, save_epochs=args.save_epochs,
           device=args.device)

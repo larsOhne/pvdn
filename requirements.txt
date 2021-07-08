@@ -42,6 +42,5 @@ tqdm==4.57.0
 typing-extensions==3.7.4.3
 urllib3==1.26.3
 Werkzeug==1.0.1
-
-pvdn~=0.1
+gdown==3.12.0
 setuptools~=45.2.0

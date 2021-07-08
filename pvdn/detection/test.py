@@ -58,7 +58,7 @@ def test(data_path, conf_thresh, output_dir, model_path, save_coco, plot_scenes,
 
     with open(os.path.join(output_dir, "metrics.json"), "w") as f:
         json.dump(metrics, f)
-    print(f"Saved metrics to {os.path.join(output_dir, 'metrics.json')}")
+    print(f"Saved metrics to {os.path.join(output_dir, 'performance.json')}")
 
     if plot_scenes:
         print(f"Plotting scenes {', '.join(plot_scenes)} ...")
@@ -98,5 +98,5 @@ if __name__ == "__main__":
                         help="Confidence threshold at which to classify positive.")
     args = parser.parse_args()
 
-    test(args.test_data, args.conf_thresh, args.output_dir, args.model_path, args.save_coco,
-         args.plot_scenes, args.device, args.batch_size, args.workers)
+    test(args.test_data, args.conf_thresh, args.output_dir, args.model_path,
+         args.save_coco, args.plot_scenes, args.device, args.batch_size, args.workers)
