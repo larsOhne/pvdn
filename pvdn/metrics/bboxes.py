@@ -278,7 +278,8 @@ class BoundingBoxEvaluator():
             print("----------------------------------")
 
         return {"precision": precision, "recall": recall, "f1_score": f1_score,
-                "box_quality": box_quality_combined}
+                "box_quality": box_quality_combined, "qk": kp_quality, "qk_std":
+                    kp_quality_std, "qb": box_quality, "qb_std": box_quality_std}
 
 
 def evaluate_single(src, dataset_path):
