@@ -180,6 +180,12 @@ class BoundingBoxEvaluator():
             "recall": TP / (TP + FN)
             "f1_score": TP / (TP + 0.5 * (FP + FN))
             "box_quality": estimate for the quality of the predicted boxes
+            "qk": keypoint-based quality of bbox
+            "qk_std": standard deviation of qk
+            "qb": bounding box-based quality of bbox
+            "qb_std": standard deviation of qb
+        For a detailed explanation of the metrics please read
+            https://arxiv.org/abs/2105.13236
         """
         self._total_scores = {"tps": 0, "boxes": 0, "kps": 0, "fps": 0, "fns": 0}
 
@@ -278,7 +284,8 @@ class BoundingBoxEvaluator():
             print("----------------------------------")
 
         return {"precision": precision, "recall": recall, "f1_score": f1_score,
-                "box_quality": box_quality_combined}
+                "box_quality": box_quality_combined, "qk": kp_quality, "qk_std":
+                    kp_quality_std, "qb": box_quality, "qb_std": box_quality_std}
 
 
 def evaluate_single(src, dataset_path):

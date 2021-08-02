@@ -89,6 +89,22 @@ Note: The data has to be provided in the format as presented on kaggle.
 In order to save the prediction results also in the coco format, use the `--save_coco` flag. If you want to visualize and save the prediction of certain scenes (say scene 23 and scene 96), you can pass them simply as a list like this: `--plot_scenes 23 96`. It will save them to your specified output directory.
 
 
+## Evaluating runtime and computational requirements
+
+You can check the runtime and computational requirements of the whole pipeline 
+including bounding box generation and classification over a whole dataset split by 
+using the `inference.py` script:
+
+```
+python3 inference.py --data /path/to/dataset/day/test --yaml BlobDetectorParameters.yaml --weights weights_pretrained.pt
+```
+
+The output will be displayed in the console.
+
+**Note** that for counting the FLOPs for the blob detector, your CPU architecture 
+has to support certain counters. If you think your counter is available but the 
+script still says otherwise, have a look at the discussion here: https://stackoverflow.com/questions/32308175/papi-avail-no-events-available
+
 ## Visualize tracking results
 
 The results of the proposed tracker can be visualized by the main function of `model/tracker.py`. For that the path to a folder with a sequence of images and the correspoding annotations has to be provided:
