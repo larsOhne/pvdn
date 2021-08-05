@@ -45,6 +45,8 @@ class BoundingBoxEvaluator():
             }
         }
         Each bounding box is saved as [x1, y1, x2, y2].
+        Note that "scores" has to contain the probabilities predicted by the model
+        in the range between 0 and 1.
         :param path: path to the .json results file.
         """
         if not os.path.splitext(path)[-1]:
@@ -64,6 +66,8 @@ class BoundingBoxEvaluator():
             }
         }
         Each bounding box is saved as [x1, y1, x2, y2].
+        Note that "scores" has to contain the probabilities predicted by the model
+        in the range between 0 and 1.
         :param results: Dictionary containing the results.
         """
         self._predictions = results
@@ -225,7 +229,7 @@ class BoundingBoxEvaluator():
                 else:
                     # goal: exactly one kp in each box
                     # box quality is lower the more kps there are in one box
-                    box_quality_hist.append(1 / nbr_kps_in_box)
+                    kp_quality_hist.append(1 / nbr_kps_in_box)
 
             # second check every kp
             # penalize if one kp lies in several boxes
@@ -240,7 +244,7 @@ class BoundingBoxEvaluator():
                     img_scores["tps"] += 1
                     # goal: each kp lies in only one box
                     # quality is lower the more boxes the kp lies in
-                    kp_quality_hist.append(1 / nbr_boxes_containing_kp)
+                    box_quality_hist.append(1 / nbr_boxes_containing_kp)
 
             self._total_scores = {k: v + self._total_scores[k] for k, v in img_scores.items()}
 
@@ -279,8 +283,8 @@ class BoundingBoxEvaluator():
                   f"Recall:\t\t\t{recall}\n"
                   f"F1 Score:\t\t{f1_score}\n"
                   f"Box Quality:\t\t{box_quality_combined}\n"
-                  f"q_b:\t\t\t{box_quality} +- {box_quality_std}\n"
-                  f"q_k:\t\t\t{kp_quality} +- {kp_quality_std}")
+                  f"q_k:\t\t\t{kp_quality} +- {kp_quality_std}\n"
+                  f"q_b:\t\t\t{box_quality} +- {box_quality_std}")
             print("----------------------------------")
 
         return {"precision": precision, "recall": recall, "f1_score": f1_score,
