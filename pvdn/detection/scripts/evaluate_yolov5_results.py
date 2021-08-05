@@ -26,6 +26,6 @@ if __name__ == "__main__":
     evaluator = BoundingBoxEvaluator(data_dir=opts.data_dir)
     evaluator.load_results_from_dict(results=preds)
     performance = evaluator.evaluate(conf_thresh=0.5, verbose=True)
-    perf_path = os.path.join(opts.out_dir, "performance.json")
+    perf_path = os.path.join(opts.out_dir, "performance_pvdn_metrics.json")
     with open(perf_path, "w") as f:
         json.dump(performance, f)
