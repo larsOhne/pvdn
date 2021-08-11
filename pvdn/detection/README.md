@@ -88,6 +88,14 @@ Note: The data has to be provided in the format as presented on kaggle.
 
 In order to save the prediction results also in the coco format, use the `--save_coco` flag. If you want to visualize and save the prediction of certain scenes (say scene 23 and scene 96), you can pass them simply as a list like this: `--plot_scenes 23 96`. It will save them to your specified output directory.
 
+**Disclaimer:** The results obtained here differ slightly from the ones reported in 
+the official IROS 2021 paper. This because after publication a small bug was found, 
+which has now been fixed and makes the performance of the network slightly better.
+
+| Source | Precision | Recall | F1-Score | q | qk | qb |
+| ------ | :-------: | :----: | :------: | :-: | :-: | :-: |
+| IROS 2021 | 0.91 | 0.51 | 0.66 | 0.40 | 0.40 +- 0.21 | 1.00 -+ 0.00 |
+| This repo | 0.89 | 0.54 | 0.67 | 0.40 | 0.40 +- 0.22 | 1.00 -+ 0.00 |
 
 ## Evaluating runtime and computational requirements
 

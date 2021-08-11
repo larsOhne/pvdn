@@ -4,6 +4,8 @@ from tqdm import tqdm
 import numpy as np
 from torch.nn import Module
 import torch
+from torch import sigmoid
+
 
 def train_one_epoch(model, dataloader: DataLoader, criterion, optimizer: Optimizer, device):
     model.train()
@@ -27,11 +29,13 @@ def train_one_epoch(model, dataloader: DataLoader, criterion, optimizer: Optimiz
         for i, img_id in enumerate(ids):
             img_id = img_id.item()
             if str(img_id) not in pred_dict.keys():
-                pred_dict[str(img_id)] = {"boxes": [bb_coords[i].tolist()], "scores": [outputs[
-                                                                                      i].item()]}
+                pred_dict[str(img_id)] = {
+                    "boxes": [bb_coords[i].tolist()],
+                    "scores": [sigmoid(outputs[i]).item()]
+                }
             else:
                 pred_dict[str(img_id)]["boxes"].append(bb_coords[i].tolist())
-                pred_dict[str(img_id)]["scores"].append(outputs[i].item())
+                pred_dict[str(img_id)]["scores"].append(sigmoid(outputs[i]).item())
 
     return np.mean(loss_hist), pred_dict
 
@@ -56,10 +60,12 @@ def val_one_epoch(model: Module, dataloader: DataLoader, criterion, device, task
         for i, img_id in enumerate(ids):
             img_id = img_id.item()
             if str(img_id) not in pred_dict.keys():
-                pred_dict[str(img_id)] = {"boxes": [bb_coords[i].tolist()],
-                                          "scores": [outputs[i].item()]}
+                pred_dict[str(img_id)] = {
+                    "boxes": [bb_coords[i].tolist()],
+                    "scores": [sigmoid(outputs[i]).item()]
+                }
             else:
                 pred_dict[str(img_id)]["boxes"].append(bb_coords[i].tolist())
-                pred_dict[str(img_id)]["scores"].append(outputs[i].item())
+                pred_dict[str(img_id)]["scores"].append(sigmoid(outputs[i]).item())
 
     return np.mean(loss_hist), pred_dict
