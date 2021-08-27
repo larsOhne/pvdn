@@ -25,7 +25,7 @@ class Instance(Keypoint):
 
     def __init__(self, position: Tuple[int, int] = None, oid: int = 0, vehicle: Keypoint = None,
                  direct: bool = False, rear: bool = False):
-        super(Instance, self).__init__(oid, position)
+        super(Instance, self).__init__(position, oid)
 
         self.vehicle = vehicle
         self.direct = direct
@@ -61,7 +61,7 @@ class Vehicle(Keypoint):
 
     def _init__(self, position: Tuple[int, int] = None, oid: int = 0, direct: bool = False,
                 instances: List[Instance] = [], *args, **kwargs):
-        super(Vehicle, self).__init__(oid, position)
+        super(Vehicle, self).__init__(position, oid)
 
         # initialize subclass attributes
         self.direct = direct
