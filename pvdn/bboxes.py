@@ -12,9 +12,11 @@ from tqdm import tqdm
 
 
 class BoundingBoxDataset(PVDNDataset):
-    def __init__(self, path, filters: list = [], transform=None, read_annots=True, load_images=True,
+    def __init__(self, path, filters: list = [], transform=None,
+                 read_annots=True, load_images=True,
                  keypoints_path: str = None, bounding_box_path: str = None,
-                 blob_detector: object = None, sup_mult: int = 2, box_size: tuple = (64, 64),
+                 blob_detector: object = None, sup_mult: int = 2,
+                 box_size: tuple = (64, 64),
                  norm_minmax: bool = True) -> None:
         """
         :param path: Path to the dataset directory of the specific illumination cycle and split.
@@ -38,7 +40,8 @@ class BoundingBoxDataset(PVDNDataset):
         :param norm_minmax: Flag to set if the pixel values in each bounding box are supposed to
             be normalized between 0 and 1.
         """
-        super().__init__(path, filters, None, read_annots, load_images, keypoints_path)
+        super().__init__(path, filters, None, read_annots, load_images,
+                         keypoints_path)
 
         self.bounding_box_path = bounding_box_path if bounding_box_path else \
             os.path.join(self.labels_path, "bounding_boxes")
@@ -49,7 +52,8 @@ class BoundingBoxDataset(PVDNDataset):
                 raise TypeError(f"blob_detector has to be of type {Detector}.")
 
         self.blob_detector = blob_detector if blob_detector else \
-            DynamicBlobDetector(k=0.55, w=26, padding=9, dev_thresh=0.01, nms_distance=2, small_scale=None,
+            DynamicBlobDetector(k=0.55, w=26, padding=9, dev_thresh=0.01,
+                                nms_distance=2, small_scale=None,
                                 considered_region=None)
         self.sup_mult = sup_mult
         self.box_size = box_size
@@ -77,7 +81,8 @@ class BoundingBoxDataset(PVDNDataset):
 
             if bounding_boxes:
                 # extract keypoints from vehicles
-                points = [inst.position for vehic in vehicles for inst in vehic.instances]
+                points = [inst.position for vehic in vehicles for inst in
+                          vehic.instances]
                 # assign labels
                 labels = self.label_boxes(bounding_boxes, points)
                 labels = list(np.array(labels).astype(float))
@@ -93,7 +98,8 @@ class BoundingBoxDataset(PVDNDataset):
                               'labels': labels}
                 json.dump(annotation, f)
 
-    def plot_scenes(self, scene_ids: list, preds: dict, output_dir: str, conf_thresh: float = 0.5):
+    def plot_scenes(self, scene_ids: list, preds: dict, output_dir: str,
+                    conf_thresh: float = 0.5):
         """
         TODO: function & parameter description
         """
@@ -111,20 +117,24 @@ class BoundingBoxDataset(PVDNDataset):
                 os.mkdir(scene_out_dir)
                 scene_ids.remove(scene.sid)
                 for img_id in scene.image_ids:
-                    img_path = os.path.join(self.images_path, scene.directory, f"{img_id:06d}.png")
+                    img_path = os.path.join(self.images_path, scene.directory,
+                                            f"{img_id:06d}.png")
                     # load image as grayscale
                     img = cv2.imread(img_path)
                     try:
                         bboxes = np.array(preds[str(img_id)]["boxes"])
                         scores = np.array(preds[str(img_id)]["scores"])
-                        bboxes = np.delete(bboxes, np.where(scores < conf_thresh), axis=0)
+                        bboxes = np.delete(bboxes,
+                                           np.where(scores < conf_thresh),
+                                           axis=0)
                         bboxes = bboxes.reshape(-1, 4)
                         # plot the boxes
                         img = self.plot_bboxes(img, bboxes)
                     except KeyError:
                         pass
                     # save
-                    cv2.imwrite(os.path.join(scene_out_dir, f"{img_id:06d}.png"), img)
+                    cv2.imwrite(
+                        os.path.join(scene_out_dir, f"{img_id:06d}.png"), img)
 
     def plot_bboxes(self, img, bboxes):
         """
@@ -132,7 +142,8 @@ class BoundingBoxDataset(PVDNDataset):
         """
         bboxes = np.array(bboxes, dtype=int)
         for bbox in bboxes:
-            img = cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color=(0, 255, 0),
+            img = cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]),
+                                color=(0, 255, 0),
                                 thickness=3)
         return img
 
@@ -151,7 +162,8 @@ class BoundingBoxDataset(PVDNDataset):
         img, info, vehicles = PVDNDataset.__getitem__(self, idx)
 
         path = self.bounding_box_path if path is None else path
-        points = points = [inst.position for vehic in vehicles for inst in vehic.instances]
+        points = points = [inst.position for vehic in vehicles for inst in
+                           vehic.instances]
         # extract information
         if extract:
             bounding_boxes = self.blob_detector.propose(img)
@@ -229,7 +241,8 @@ class BoundingBoxDataset(PVDNDataset):
         try:
             for img_idx, id in enumerate(self.img_idx):
                 # loading box annotation file
-                annotation_path = os.path.join(self.bounding_box_path, "{:06d}.json".format(id))
+                annotation_path = os.path.join(self.bounding_box_path,
+                                               "{:06d}.json".format(id))
                 with open(annotation_path, 'r') as f:
                     annotations = json.load(f)
 
@@ -255,17 +268,18 @@ class BoundingBoxDataset(PVDNDataset):
                   '`init_bounding_boxes` to re-initialize the object '
                   'structure.')
 
-    def __getitem__(self, idx):
+    def _crop_image(self, img: np.ndarray, bb_coords: np.ndarray) -> np.ndarray:
         """
-        TODO: param description
-        :param idx:
-        :return: float img between 0-1
+        Crop a sub image from the given image specified by the given
+        coordinates. The support multiplier is used to increase the cropped
+        area.
+        :param img: the subimage should be cropped from this image
+        :type img: numpy.ndarray with shape (w,h)
+        :param bb_coords: coordinates [x1, y1, x2, y2] of the subimage
+        :type bb_coords: numpy.ndarray with shape (4,)
+        :return: the cropped image
+        :rtype: numpy.ndarray
         """
-        # load the data
-        img_idx, bb_idx = self.bounding_box_idx[idx]
-        img, info, vehicles = super().__getitem__(img_idx)
-        bb_coords = np.array(self.bounding_boxes[idx])
-        label = self.labels[idx]
         h, w = img.shape
 
         bb_w, bb_h = bb_coords[2] - bb_coords[0], bb_coords[3] - bb_coords[1]
@@ -279,9 +293,25 @@ class BoundingBoxDataset(PVDNDataset):
                    min(center_x + bb_w * self.sup_mult, w),
                    min(center_y + bb_h * self.sup_mult, h)]
         crop_bb = np.array(crop_bb).astype('uint32')
+        cropped_bb = img[crop_bb[1]:crop_bb[3], crop_bb[0]:crop_bb[2]]
+        return cropped_bb
+
+    def __getitem__(self, idx):
+        """
+        TODO: param description
+        :param idx:
+        :return: float img between 0-1
+        """
+        # load the data
+        img_idx, bb_idx = self.bounding_box_idx[idx]
+        img, info, vehicles = super().__getitem__(img_idx)
+        bb_coords = np.array(self.bounding_boxes[idx])
+        label = self.labels[idx]
+
+        cropped_bbox = self._crop_image(img, bb_coords)
 
         # resize cropped box to constant size
-        feature = cv2.resize(img[crop_bb[1]:crop_bb[3], crop_bb[0]:crop_bb[2]],
+        feature = cv2.resize(cropped_bbox,
                              self.box_size, interpolation=cv2.INTER_LINEAR)
         feature = np.array(feature).astype('float32') / 255
         if self.norm_minmax:
@@ -315,7 +345,8 @@ class BoundingBoxDataset(PVDNDataset):
         # retrieve metadata
         info = self.img_infos[self.img_idx[idx]]
         sequence_info = info.sequence
-        image_path = os.path.join(self.images_path, sequence_info.directory, info.file_name)
+        image_path = os.path.join(self.images_path, sequence_info.directory,
+                                  info.file_name)
         # load actual image
         img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         return img, self.bounding_boxes[idx], self.labels[idx]
