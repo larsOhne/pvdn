@@ -33,9 +33,11 @@ class Cblob(object):
     def _init_c_lib(self):
         """Initialization of the C library and its functions to make them callable in Python"""
         # lib = ctypes.cdll.LoadLibrary("/home/sascha/eodan/blob_detector_with_classifier/utils/image_operations.so")
-        lib_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               "image_operations.so")
-        lib = ctypes.cdll.LoadLibrary(lib_dir)
+        lib_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
+        lib_file = [name for name in os.listdir(
+            lib_dir) if name.endswith(".so")][0]
+        lib_path = os.path.join(lib_dir, lib_file)
+        lib = ctypes.cdll.LoadLibrary(lib_path)
 
         # initialize binarize function
         self.__c_binarize = lib.binarize
