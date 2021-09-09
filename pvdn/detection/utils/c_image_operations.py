@@ -115,3 +115,75 @@ class Cblob(object):
         final_proposals -= 1
 
         return final_proposals
+
+
+LIB_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)))
+LIB_FILE = [name for name in os.listdir(LIB_DIR) if name.endswith(".so")][0]
+LIB_PATH = os.path.join(LIB_DIR, LIB_FILE)
+_lib = ctypes.cdll.LoadLibrary(LIB_PATH)
+
+# initialize propose function
+_find_proposals = _lib.find_proposals
+_find_proposals.restype = None
+_find_proposals.argtypes = [ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+                            ndpointer(ctypes.c_ubyte, flags="C_CONTIGUOUS"),
+                            ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                            ctypes.c_int]
+
+# initialize binarize function
+_binarize = _lib.binarize
+_binarize.restype = None
+_binarize.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+                      ndpointer(ctypes.c_ubyte, flags="C_CONTIGUOUS"),
+                      ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+                      ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_float,
+                      ctypes.c_float]
+
+
+def find_proposals(bin_img, padding, nms_distance):
+    if not "uint8" in str(bin_img.dtype):
+        raise TypeError(
+            "The binary input image is expected to be of type np.uint8, "
+            "but found {}. Please check.".format(str(bin_img.dtype)))
+
+    h, w = bin_img.shape[-2:]
+
+    # initialize the array with a size of 2000/4=500 maximal possible final proposals
+    final_proposals = np.array([-1] * 2000, dtype=np.int32)
+
+    # c function
+    _find_proposals = (
+        final_proposals, bin_img, ctypes.c_int(h), ctypes.c_int(w),
+        ctypes.c_int(padding), ctypes.c_int(nms_distance))
+
+    # delete all unused proposal spots in array and resize it to shape [nbr_of_proposals, 4]
+    final_proposals = np.delete(final_proposals,
+                                np.where(final_proposals == -1))
+    return final_proposals.reshape((-1, 4))
+
+
+def binarize(img, k=0.06, window=11, eps=1e-3):
+    """
+    Wrapper function for the C extension binarize function.
+    :param img: single channel input image (np.ndarray) of shape [h, w];
+                the image has to be of type np.float64 or np.float32 and in a range 0.0 - 1.0
+    :return: binarized image (np.ndarray) of shape [h, w] and type np.uint8
+            (without any morphological ops applied)
+    """
+    if not "float" in str(img.dtype):
+        raise TypeError(
+            "The input image is expected to be of type np.float32 or np.float64, "
+            "but it is {}. Please check.".format(str(img.dtype)))
+
+    h, w = img.shape[-2:]
+    ii = integral_image(img)
+    ii = ii.astype(np.float32)
+    img = img.astype(np.float32)
+
+    # initialize array to store binary image
+    bin_img = np.zeros(shape=img.shape, dtype=np.uint8)
+
+    _binarize(img, bin_img, ii, ctypes.c_int(h), ctypes.c_int(w),
+              ctypes.c_int(window),
+              ctypes.c_float(k), ctypes.c_float(eps))
+    return bin_img
