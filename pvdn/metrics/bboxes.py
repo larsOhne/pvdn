@@ -362,7 +362,7 @@ def evaluate_basic_metric(prediction_dict: dict, conf_thres: float,
     :param verbose: set to True, if output should be written to screen
     :type verbose: bool
     :return: dictionary whose keys are the metrics and whose values are the
-    corresponding performance results, per_class_performance is excluded
+    corresponding performance results
     :rtype: dict
     """
     labels_gt = None
