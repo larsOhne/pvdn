@@ -352,6 +352,6 @@ class BoundingBoxDataset(PVDNDataset):
         return img, self.bounding_boxes[idx], self.labels[idx]
 
     def compute_class_imbalance(self):
-        true = np.sum(self.labels).astype(np.u)
+        true = np.sum(self.labels).astype(np.uint8)
         false = len(self.labels) - true
         return {"true": true, "false": false}
