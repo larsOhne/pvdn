@@ -136,6 +136,7 @@ def save_epoch(ckp: dict, output_dir: str, epoch: int, val_predictions: dict):
     :param val_predictions: predictions of the current epoch
     :type val_predictions: dict
     """
+    output_dir = os.path.abspath(output_dir)
     if not os.path.isdir(os.path.join(output_dir, "checkpoints")):
         os.mkdir(os.path.join(output_dir, "checkpoints"))
     if not os.path.isdir(os.path.join(output_dir, "predictions")):
@@ -172,7 +173,7 @@ def update_best_models(ckp: dict, best_metrics: dict, best_epochs: dict,
     :param output_dir: directory where to save the files to
     :type output_dir: str
     """
-
+    output_dir = os.path.abspath(output_dir)
     for k, v in val_metrics.items():
         if "loss" in k:
             if v < best_metrics[k]:
