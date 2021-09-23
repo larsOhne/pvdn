@@ -180,7 +180,7 @@ def update_best_models(ckp: dict, best_metrics: dict, best_epochs: dict,
                 best_metrics[k] = v
                 best_epochs[k] = epoch
                 torch.save(ckp, os.path.join(output_dir, "best",
-                                             f"ckp_best_{k}.pt"))
+                                             f"best_{k}.pt"))
                 with open(os.path.join(output_dir, "best",
                                        f"val_predictions_best_"
                                        f"{k}.json"), "w") as f:
@@ -190,7 +190,7 @@ def update_best_models(ckp: dict, best_metrics: dict, best_epochs: dict,
             if v > best_metrics[k]:
                 best_metrics[k] = v
                 best_epochs[k] = epoch
-                torch.save(ckp, os.path.join(output_dir, "checkpoints",
+                torch.save(ckp, os.path.join(output_dir, "best",
                                              f"best_{k}.pt"))
 
 
