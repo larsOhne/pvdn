@@ -365,7 +365,7 @@ def train(train_data: str, val_data: str, epochs: int, lr: float, bs: int,
             best_epochs = {k: 1 for k in best_metrics.keys()}
             for k in best_metrics.keys():
                 torch.save(ckp, os.path.join(output_dir, "best",
-                                             f"ckp_best_{k}.pt"))
+                                             f"best_{k}.pt"))
         else:
             update_best_models(ckp, best_metrics, best_epochs, val_metrics,
                                val_predictions, epoch, output_dir)
