@@ -5,6 +5,7 @@ from tqdm import tqdm
 import os
 from warnings import warn
 import argparse
+from sklearn.metrics import precision_recall_fscore_support
 
 from pvdn import PVDNDataset
 
@@ -27,7 +28,8 @@ class BoundingBoxEvaluator():
 
         # indexing keypoint annotations
         for i in dataset.img_idx:
-            kp_path = os.path.join(dataset.keypoints_path, "{:06d}.json".format(i))
+            kp_path = os.path.join(dataset.keypoints_path,
+                                   "{:06d}.json".format(i))
             with open(kp_path, "r") as kp_file:
                 kp_dict = json.load(kp_file)
                 kps = []
@@ -50,11 +52,13 @@ class BoundingBoxEvaluator():
         :param path: path to the .json results file.
         """
         if not os.path.splitext(path)[-1]:
-            raise AttributeError(f"File extension should be .json not {os.path.splitext(path)[-1]}")
+            raise AttributeError(
+                f"File extension should be .json not {os.path.splitext(path)[-1]}")
         with open(path, "r") as f:
             self._predictions = json.load(f)
         if len(self._predictions.items()) == 0:
-            warn(f"Results are empty. You might want to check your results file ({path}).")
+            warn(
+                f"Results are empty. You might want to check your results file ({path}).")
 
     def load_results_from_dict(self, results: dict) -> None:
         """
@@ -72,10 +76,12 @@ class BoundingBoxEvaluator():
         """
         self._predictions = results
         if len(self._predictions.items()) == 0:
-            warn(f"Results are empty. You might want to check your results dict.")
+            warn(
+                f"Results are empty. You might want to check your results dict.")
 
     @staticmethod
-    def _kp_in_box(kp: [np.ndarray, list], box: [np.ndarray, list], tolerance: float = 0.0) \
+    def _kp_in_box(kp: [np.ndarray, list], box: [np.ndarray, list],
+                   tolerance: float = 0.0) \
             -> bool:
         """
         Checks if a keypoint lies within a bounding box. The height & width of the bounding box
@@ -93,7 +99,8 @@ class BoundingBoxEvaluator():
         return box[0] <= kp[0] <= box[2] and box[1] <= kp[1] <= box[3]
 
     @staticmethod
-    def _get_nbr_of_kps_in_box(box: [np.ndarray, list], kps: [np.ndarray, list]) -> int:
+    def _get_nbr_of_kps_in_box(box: [np.ndarray, list],
+                               kps: [np.ndarray, list]) -> int:
         """
         Calculates the number of keypoints in a specific bounding box.
         :param box: bounding box as an array of the form [x1, y1, x2, y2] -> np.ndarray
@@ -104,12 +111,15 @@ class BoundingBoxEvaluator():
             return 0
 
         return np.count_nonzero(
-            np.bitwise_and(np.bitwise_and(box[0] <= kps[:, 0], kps[:, 0] <= box[2]), np.bitwise_and(
-                box[1] <= kps[:, 1], kps[:, 1] <= box[3]))
+            np.bitwise_and(
+                np.bitwise_and(box[0] <= kps[:, 0], kps[:, 0] <= box[2]),
+                np.bitwise_and(
+                    box[1] <= kps[:, 1], kps[:, 1] <= box[3]))
         )
 
     @staticmethod
-    def _get_nbr_of_boxes_containing_kp(kp: np.ndarray, boxes: np.ndarray) -> int:
+    def _get_nbr_of_boxes_containing_kp(kp: np.ndarray,
+                                        boxes: np.ndarray) -> int:
         """
         Calculates the number of boxes spanning over a specific keypoint.
         :param kp: keypoint as an array of the form [x, y] -> np.ndarray
@@ -120,8 +130,9 @@ class BoundingBoxEvaluator():
             return 0
 
         return np.count_nonzero(
-            np.bitwise_and(np.bitwise_and(boxes[:, 0] <= kp[0], kp[0] <= boxes[:, 2]),
-                           np.bitwise_and(boxes[:, 1] <= kp[1], kp[1] <= boxes[:, 3]))
+            np.bitwise_and(
+                np.bitwise_and(boxes[:, 0] <= kp[0], kp[0] <= boxes[:, 2]),
+                np.bitwise_and(boxes[:, 1] <= kp[1], kp[1] <= boxes[:, 3]))
         )
 
     def quality_check(self, conf_thresh=0.5) -> dict:
@@ -130,11 +141,14 @@ class BoundingBoxEvaluator():
         :return: lists of ids of the images where the check failed
         """
         if self._predictions is None:
-            raise ValueError("You need to load the results first by calling the "
-                             "load_results_from_file or load_results_from_dict function.")
+            raise ValueError(
+                "You need to load the results first by calling the "
+                "load_results_from_file or load_results_from_dict function.")
         try:
             filtered_predictions = {k: np.delete(np.array(v["boxes"]),
-                                                 np.where(np.array(v["scores"]) <= conf_thresh), axis=0)
+                                                 np.where(np.array(v[
+                                                                       "scores"]) <= conf_thresh),
+                                                 axis=0)
                                     for k, v in self._predictions.items()}
         except:
             filtered_predictions = self._predictions.copy()
@@ -150,7 +164,8 @@ class BoundingBoxEvaluator():
             else:
                 pred_boxes = []
             for box in pred_boxes:
-                get_nbr_of_kps_in_box = self._get_nbr_of_kps_in_box(box=box, kps=kps)
+                get_nbr_of_kps_in_box = self._get_nbr_of_kps_in_box(box=box,
+                                                                    kps=kps)
                 if get_nbr_of_kps_in_box > 1:
                     if not nbr_kps_in_box_list or nbr_kps_in_box_list[0] != id:
                         nbr_kps_in_box_list.insert(0, id)
@@ -171,7 +186,8 @@ class BoundingBoxEvaluator():
                 if not kp_in_box:
                     kp_in_box_list.append(id)
 
-        return {"nbr_kps_in_box_list": nbr_kps_in_box_list, "kp_in_box_list": kp_in_box_list}
+        return {"nbr_kps_in_box_list": nbr_kps_in_box_list,
+                "kp_in_box_list": kp_in_box_list}
 
     def evaluate(self, conf_thresh=0.5, verbose=False) -> dict:
         """
@@ -191,14 +207,18 @@ class BoundingBoxEvaluator():
         For a detailed explanation of the metrics please read
             https://arxiv.org/abs/2105.13236
         """
-        self._total_scores = {"tps": 0, "boxes": 0, "kps": 0, "fps": 0, "fns": 0}
+        self._total_scores = {"tps": 0, "boxes": 0, "kps": 0, "fps": 0,
+                              "fns": 0}
 
         if self._predictions is None:
-            raise ValueError("You need to load the results first by calling the "
-                             "load_results_from_file or load_results_from_dict function.")
+            raise ValueError(
+                "You need to load the results first by calling the "
+                "load_results_from_file or load_results_from_dict function.")
         try:
             filtered_predictions = {k: np.delete(np.array(v["boxes"]),
-                                                 np.where(np.array(v["scores"]) <= conf_thresh), axis=0)
+                                                 np.where(np.array(v[
+                                                                       "scores"]) <= conf_thresh),
+                                                 axis=0)
                                     for k, v in self._predictions.items()}
         except:
             filtered_predictions = self._predictions.copy()
@@ -206,8 +226,9 @@ class BoundingBoxEvaluator():
         no_key_counter = 0
         box_quality_hist = []
         kp_quality_hist = []
-        for id, kps in tqdm(self.gt_kps.items(), disable=not verbose, desc="Evaluating bounding "
-                                                                           "box metrics"):
+        for id, kps in tqdm(self.gt_kps.items(), disable=not verbose,
+                            desc="Evaluating bounding "
+                                 "box metrics"):
             kps = np.array(kps)
 
             img_scores = {"tps": 0, "boxes": 0, "kps": 0, "fps": 0, "fns": 0}
@@ -234,8 +255,9 @@ class BoundingBoxEvaluator():
             # second check every kp
             # penalize if one kp lies in several boxes
             for kp in kps:
-                nbr_boxes_containing_kp = self._get_nbr_of_boxes_containing_kp(kp=kp,
-                                                                               boxes=pred_boxes)
+                nbr_boxes_containing_kp = self._get_nbr_of_boxes_containing_kp(
+                    kp=kp,
+                    boxes=pred_boxes)
 
                 # if there is no box containing the kp it is a false negative
                 if nbr_boxes_containing_kp == 0:
@@ -246,25 +268,32 @@ class BoundingBoxEvaluator():
                     # quality is lower the more boxes the kp lies in
                     box_quality_hist.append(1 / nbr_boxes_containing_kp)
 
-            self._total_scores = {k: v + self._total_scores[k] for k, v in img_scores.items()}
+            self._total_scores = {k: v + self._total_scores[k] for k, v in
+                                  img_scores.items()}
 
         nds = 4
         # now we have TPs, FPs, and FNs and can calculate precision & recall
         try:
-            precision = round(self._total_scores["tps"] / (self._total_scores["tps"] +
-                                                           self._total_scores["fps"]), ndigits=nds)
+            precision = round(
+                self._total_scores["tps"] / (self._total_scores["tps"] +
+                                             self._total_scores["fps"]),
+                ndigits=nds)
         except ZeroDivisionError:
             precision = -1
 
         try:
-            recall = round(self._total_scores["tps"] / (self._total_scores["tps"] +
-                                                        self._total_scores["fns"]), ndigits=nds)
+            recall = round(
+                self._total_scores["tps"] / (self._total_scores["tps"] +
+                                             self._total_scores["fns"]),
+                ndigits=nds)
         except ZeroDivisionError:
             recall = -1
 
         try:
-            f1_score = round(self._total_scores["tps"] / (self._total_scores["tps"] + 0.5 * (
-                    self._total_scores["fps"] + self._total_scores["fns"])), ndigits=nds)
+            f1_score = round(
+                self._total_scores["tps"] / (self._total_scores["tps"] + 0.5 * (
+                        self._total_scores["fps"] + self._total_scores["fns"])),
+                ndigits=nds)
         except ZeroDivisionError:
             f1_score = -1
 
@@ -277,7 +306,8 @@ class BoundingBoxEvaluator():
         box_quality_combined = round(box_quality * kp_quality, ndigits=nds)
 
         if verbose:
-            print(f"Could not find {no_key_counter} of {self._nbr_images} images.")
+            print(
+                f"Could not find {no_key_counter} of {self._nbr_images} images.")
             print("----------------------------------")
             print(f"Precision:\t\t{precision}\n"
                   f"Recall:\t\t\t{recall}\n"
@@ -289,7 +319,8 @@ class BoundingBoxEvaluator():
 
         return {"precision": precision, "recall": recall, "f1_score": f1_score,
                 "box_quality": box_quality_combined, "qk": kp_quality, "qk_std":
-                    kp_quality_std, "qb": box_quality, "qb_std": box_quality_std}
+                    kp_quality_std, "qb": box_quality,
+                "qb_std": box_quality_std}
 
 
 def evaluate_single(src, dataset_path):
@@ -298,12 +329,119 @@ def evaluate_single(src, dataset_path):
     evaluator.evaluate(verbose=True)
 
 
+def evaluate(evaluator: BoundingBoxEvaluator, conf_thresh: float,
+             predictions: dict, verbose: bool = True) -> dict:
+    """
+    Calculate the metric presented in the paper using the given evaluator.
+    :param evaluator: evaluator that should be used to evaluate the predictions
+    :type evaluator: BoundingBoxEvaluator
+    :param conf_thresh: threshold used for classification
+    :type conf_thresh: float
+    :param predictions: prediction dictionary
+    :type predictions: dict
+    :param verbose: whether to output information on screen, default True
+    :type verbose: bool
+    :return: dictionary containing the metrics of the paper
+    :rtype: dict
+    """
+    evaluator.load_results_from_dict(predictions)
+    metrics = evaluator.evaluate(conf_thresh=conf_thresh, verbose=verbose)
+    return metrics
+
+
+def evaluate_basic_metric(prediction_dict: dict, conf_thres: float,
+                          verbose: bool = False) -> dict:
+    """
+    Evaluate the model *NOT* given the paper metric but the main definition
+    of precision, recall, and f1-score.
+    :param prediction_dict: results to evaluate
+    :type prediction_dict: dict
+    :param conf_thres: if the score stored in prediction_dict["score"] is at
+    least as large as conf_thres the bounding box is classified as relevant
+    :type conf_thres: float
+    :param verbose: set to True, if output should be written to screen
+    :type verbose: bool
+    :return: dictionary whose keys are the metrics and whose values are the
+    corresponding performance results
+    :rtype: dict
+    """
+    labels_gt = None
+    labels_pred = None
+    for img_id, info in prediction_dict.items():
+        boolean_pred = np.array(info["scores"]) >= conf_thres
+        y_pred = np.array(boolean_pred, dtype=np.uint8)
+        if labels_pred is None:
+            labels_pred = y_pred
+            labels_gt = info["labels"]
+        else:
+            labels_pred = np.concatenate((labels_pred, y_pred))
+            labels_gt = np.concatenate((labels_gt, info["labels"]))
+
+    metrics = compute_basic_metric(y_test=labels_gt, y_pred=labels_pred,
+                                   verbose=verbose)
+    metrics = {k: (v.tolist() if k.startswith("per_class") else v)
+               for k, v in metrics.items()}
+    return metrics
+
+
+def compute_basic_metric(y_test: np.ndarray, y_pred: np.ndarray,
+                         verbose: bool = True) -> dict:
+    """
+    Compute the basic metrics, *NOT* the paper metrics.
+    :param y_test: ground truth labels
+    :type y_test: np.ndarray
+    :param y_pred: predicted labels
+    :type y_pred: np.ndarry
+    :param verbose: set to True, if output should be written to screen
+    :type verbose: bool
+    :return: dictionary whose keys are the metrics and whose values are the
+    corresponding performance results
+    :rtype: dict
+    """
+    micro_precision, micro_recall, micro_f1_score, _ = precision_recall_fscore_support(
+        y_test,
+        y_pred,
+        average="micro")
+
+    macro_precision, macro_recall, macro_f1_score, _ = precision_recall_fscore_support(
+        y_test,
+        y_pred,
+        average="macro")
+
+    precision_per_class, recall_per_class, f1_score_per_class, _ = precision_recall_fscore_support(
+        y_test,
+        y_pred)
+
+    if verbose:
+        print("----------------------------------")
+        print(f"Micro:\t\tPrecision: {micro_precision}\tRecall: "
+              f"{micro_recall}\tF1: {micro_f1_score}\n"
+              f"Macro:\t\tPrecision: {macro_precision}\tRecall: "
+              f"{macro_recall}\tF1: {macro_f1_score}\n"
+              f"Per class:\tPrecision: {precision_per_class}\tRecall: "
+              f"{recall_per_class}\tF1: {f1_score_per_class}\n")
+        print("----------------------------------")
+
+    return {"micro_precision": micro_precision,
+            "micro_recall": micro_recall,
+            "micro_f1_score": micro_f1_score,
+            "macro_precision": macro_precision,
+            "macro_recall": macro_recall,
+            "macro_f1_score": macro_f1_score,
+            "per_class_precision": precision_per_class,
+            "per_class_recall": recall_per_class,
+            "per_class_f1_score": f1_score_per_class
+            }
+
+
 def find_best(src, file_pattern, dataset_path):
     dataset = PVDNDataset(path=dataset_path)
     evaluator = BoundingBoxEvaluator(dataset=dataset)
 
-    best = {"precision": {"model": None, "value": 0}, "recall": {"model": None, "value": 0},
-            "f1_score": {"model": None, "value": 0}, "box_quality": {"model": None, "value": 0}}
+    best = {"precision": {"model": None, "value": 0},
+            "recall": {"model": None, "value": 0},
+            "f1_score": {"model": None, "value": 0},
+            "box_quality": {"model": None, "value": 0}}
 
     for pred_file in sorted(os.listdir(src)):
         if file_pattern in pred_file:
@@ -328,6 +466,8 @@ def find_best(src, file_pattern, dataset_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--result_file", type=str, help=".json file containing the results.")
-    parser.add_argument("--dataset_path", type=str, help="Path to the dataset split.")
+    parser.add_argument("--result_file", type=str,
+                        help=".json file containing the results.")
+    parser.add_argument("--dataset_path", type=str,
+                        help="Path to the dataset split.")
     args = parser.parse_args()
