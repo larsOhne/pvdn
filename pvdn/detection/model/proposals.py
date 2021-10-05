@@ -9,6 +9,8 @@ from pvdn.detection.utils.misc import rescale_boxes
 # from skimage.morphology import white_tophat, disk, binary_opening
 # from skimage.transform import rescale, resize
 from scipy.ndimage import label, find_objects, binary_closing, binary_dilation
+
+
 # from skimage.transform.integral import integral_image
 
 
@@ -43,16 +45,19 @@ class Detector():
         pass
 
     def propose(self, img):
-        raise NotImplementedError("Every child of the class Detector needs to implement the "
-                                  "propose function.")
+        raise NotImplementedError(
+            "Every child of the class Detector needs to implement the "
+            "propose function.")
 
 
 class DynamicBlobDetector(Cblob, Detector):
     """ BlobDetector with dynamic thresholding and integral image
     optimization """
 
-    def __init__(self, k: float = 0.55, w: int = 26, padding: int = 9, eps: float = 1e-3,
-                 dev_thresh: float = 0.01, nms_distance: int = 2, small_scale: tuple = None,
+    def __init__(self, k: float = 0.55, w: int = 26, padding: int = 9,
+                 eps: float = 1e-3,
+                 dev_thresh: float = 0.01, nms_distance: int = 2,
+                 small_scale: tuple = None,
                  considered_region: tuple = None):
         """
         :param k: Scaling parameter in dynamic thresholding
@@ -82,8 +87,10 @@ class DynamicBlobDetector(Cblob, Detector):
         """ read input parameters for the DynamicBlobDetector from .yaml file """
         with open(path, 'r') as stream:
             file = yaml.load(stream)['DynamicBlobDetector']
-        return DynamicBlobDetector(k=file['k'], w=file['w'], dev_thresh=file['dev_thresh'],
-                                   nms_distance=file['nms_distance'], small_scale=file['small_scale'],
+        return DynamicBlobDetector(k=file['k'], w=file['w'],
+                                   dev_thresh=file['dev_thresh'],
+                                   nms_distance=file['nms_distance'],
+                                   small_scale=file['small_scale'],
                                    considered_region=file['considered_region'])
 
     def propose(self, img):
@@ -108,15 +115,13 @@ class DynamicBlobDetector(Cblob, Detector):
         h, w = img.shape
         img = img.astype('float') / 255.
         if self.small_scale is not None:
-            small_scale = tuple(self.small_scale[i] // 2 for i in range(len(self.small_scale)))
-            scale_x, scale_y = (float(w) / float(small_scale[0])), (float(h) / float(small_scale[1]))
-            resized = cv2.resize(img, small_scale, interpolation=cv2.INTER_LINEAR)
-        else:
-            scale = (w // 2, h // 2)
-            scale_x, scale_y = (float(w) / float(scale[0])), \
-                               (float(h) / float(scale[1]))
-            resized = cv2.resize(img, scale,
+            scale_x = w / self.small_scale[0]
+            scale_y = h / self.small_scale[1]
+            resized = cv2.resize(img, self.small_scale,
                                  interpolation=cv2.INTER_LINEAR)
+        else:
+            # no scaling needed
+            resized = img
         cv2.normalize(resized, resized, 0, 1, cv2.NORM_MINMAX)
 
         # filter image to remove high frequency noise
@@ -161,7 +166,10 @@ class DynamicBlobDetector(Cblob, Detector):
                 if deviation > self.dev_thresh:
                     proposals.append(proposal)
 
-        big_scale = rescale_boxes(proposals, scale_x, scale_y)
-        return [[bb[0] + cr_l, bb[1] + cr_t, bb[2] + cr_l, bb[3] + cr_t] for bb in
+        if self.small_scale:
+            big_scale = rescale_boxes(proposals, scale_x, scale_y)
+        else:
+            big_scale = rescale_boxes(proposals, 1, 1)
+        return [[bb[0] + cr_l, bb[1] + cr_t, bb[2] + cr_l, bb[3] + cr_t] for bb
+                in
                 big_scale]
-        # return proposals
