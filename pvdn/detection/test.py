@@ -3,15 +3,14 @@ import os
 import shutil
 import json
 from warnings import warn
-
 import torch
 from torchvision.transforms import ToTensor
+from ptflops import get_model_complexity_info
 
 from pvdn import BoundingBoxDataset
 from pvdn.metrics.bboxes import BoundingBoxEvaluator
 from pvdn.detection.model.single_flow_classifier import Classifier
 from pvdn.detection.engine import val_one_epoch
-from pvdn.detection.model.proposals import DynamicBlobDetector
 from pvdn.metrics.convert import result_to_coco_format
 
 
@@ -44,6 +43,18 @@ def test(data_path, conf_thresh, output_dir, model_path, save_coco, plot_scenes,
                                              num_workers=n_workers)
 
     model = Classifier()
+
+    # get model stats
+    in_shape = tuple(testset[0][0].shape)
+    macs, params = get_model_complexity_info(model, in_shape, as_strings=False,
+                                             print_per_layer_stat=True, verbose=True)
+    gflops = macs / 1000000000 * 2
+    print("-----------------------------\n"
+          "Model complexity:\n"
+          f"\tFLOPs:\t{round(gflops, 2)} GFLOPs\n"
+          f"\tParams:\t{params}\n"
+          f"-----------------------------")
+
     try:
         model.load_state_dict(torch.load(os.path.abspath(model_path))["model"])
     except KeyError:
@@ -58,7 +69,7 @@ def test(data_path, conf_thresh, output_dir, model_path, save_coco, plot_scenes,
 
     with open(os.path.join(output_dir, "metrics.json"), "w") as f:
         json.dump(metrics, f)
-    print(f"Saved metrics to {os.path.join(output_dir, 'performance.json')}")
+    print(f"Saved metrics to {os.path.join(output_dir, 'metrics.json')}")
 
     if plot_scenes:
         print(f"Plotting scenes {', '.join(plot_scenes)} ...")
@@ -80,7 +91,7 @@ def test(data_path, conf_thresh, output_dir, model_path, save_coco, plot_scenes,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--test_data", type=str,
-                        default="/raid/Datasets/EODAN/kaggle/day/test",
+                        default="/home/lukas/Development/datasets/PVDN/day/test",
                         help="Path to the test split.")
     parser.add_argument("--output_dir", type=str, default="runs/test",
                         help="Path to results ")

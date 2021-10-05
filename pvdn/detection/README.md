@@ -88,6 +88,32 @@ Note: The data has to be provided in the format as presented on kaggle.
 
 In order to save the prediction results also in the coco format, use the `--save_coco` flag. If you want to visualize and save the prediction of certain scenes (say scene 23 and scene 96), you can pass them simply as a list like this: `--plot_scenes 23 96`. It will save them to your specified output directory.
 
+**Disclaimer:** The image size here differs from the image size stated in the 
+IROS2021 paper. 
+This is because after publication a small bug was found which secretly downsized 
+the images. The bug has now been fixed and the image size stated here is the one 
+which actually has been used in the IROS2021 publication.
+
+| Source | Image Size (WxH) |Precision | Recall | F1-Score | q | qk | qb |
+| ------ | :-------: | :-------: | :----: | :------: | :-: | :-: | :-: |
+| IROS 2021 | 640x490 | 0.91 | 0.51 | 0.66 | 0.40 | 0.40 +- 0.21 | 1.00 -+ 0.00 |
+| This repo | 345x240 | 0.54 | 0.67 | 0.40 | 0.40 +- 0.22 | 1.00 -+ 0.00 |
+
+## Evaluating runtime and computational requirements
+
+You can check the runtime and computational requirements of the whole pipeline 
+including bounding box generation and classification over a whole dataset split by 
+using the `inference.py` script:
+
+```
+python3 inference.py --data /path/to/dataset/day/test --yaml BlobDetectorParameters.yaml --weights weights_pretrained.pt
+```
+
+The output will be displayed in the console.
+
+**Note** that for counting the FLOPs for the blob detector, your CPU architecture 
+has to support certain counters. If you think your counter is available but the 
+script still says otherwise, have a look at the discussion here: https://stackoverflow.com/questions/32308175/papi-avail-no-events-available
 
 ## Visualize tracking results
 
