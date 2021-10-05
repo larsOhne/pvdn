@@ -91,13 +91,13 @@ In order to save the prediction results also in the coco format, use the `--save
 **Disclaimer:** The image size here differs from the image size stated in the 
 IROS2021 paper. 
 This is because after publication a small bug was found which secretly downsized 
-the images. The bug has now been fixed and the image size stated here is the one 
+the images from 480x690 to 240x345. The bug has now been fixed and the image size stated here is the one 
 which actually has been used in the IROS2021 publication.
 
 | Source | Image Size (WxH) |Precision | Recall | F1-Score | q | qk | qb |
 | ------ | :-------: | :-------: | :----: | :------: | :-: | :-: | :-: |
-| IROS 2021 | 640x490 | 0.91 | 0.51 | 0.66 | 0.40 | 0.40 +- 0.21 | 1.00 -+ 0.00 |
-| This repo | 345x240 | 0.54 | 0.67 | 0.40 | 0.40 +- 0.22 | 1.00 -+ 0.00 |
+| IROS 2021 - reported results | **240x345** | 0.88 | 0.54 | 0.67 | 0.40 | 0.40 +/- 0.22 | 1.00 +/- 0.00 |
+| IROS 2021 - corrected results | 480x690 | 0.91 | 0.51 | 0.66 | 0.40 | 0.40 +/- 0.21 | 1.00 +/- 0.00 |
 
 ## Evaluating runtime and computational requirements
 
