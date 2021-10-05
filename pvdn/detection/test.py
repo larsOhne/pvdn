@@ -64,7 +64,7 @@ def test(data_path, conf_thresh, output_dir, model_path, save_coco, plot_scenes,
 
     _, predictions = val_one_epoch(model=model, dataloader=testloader,
                                    criterion=None,
-                                   device=device, task="Test")
+                                   device=device)
 
     evaluator = BoundingBoxEvaluator(data_dir=data_path)
     metrics = evaluate(evaluator, conf_thresh,
