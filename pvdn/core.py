@@ -26,7 +26,7 @@ class PVDNDataset(Dataset):
     https://www.kaggle.com/saralajew/provident-vehicle-detection-at-night-pvdn
     """
 
-    def __init__(self, path: str, filters: List[Any] = [], transform: List[Any] = None,
+    def __init__(self, path: str, filters: List[Any] = [], transform=None,
                  read_annots: bool = True, load_images: bool = True, keypoints_path: str = None):
         super(PVDNDataset, self).__init__()
 
@@ -149,7 +149,7 @@ class PVDNDataset(Dataset):
             img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
             if self.transform is not None:
-                img = self.transform.transform(img)
+                img = self.transform(img)
         else:
             img = None
 

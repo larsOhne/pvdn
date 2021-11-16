@@ -52,7 +52,7 @@ class Instance(Keypoint):
             return self.oid == other.oid and self.vehicle.oid == other.vehicle.oid
 
     def __repr__(self):
-        return "Instance: iid={}, oid={}, direct={}, rear={}".format(self.iid, self.vehicle.oid, self.direct, self.rear)
+        return "Instance: iid={}, oid={}, direct={}, rear={}".format(self.oid, self.vehicle.oid, self.direct, self.rear)
 
 
 class Vehicle(Keypoint):
