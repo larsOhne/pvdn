@@ -20,7 +20,7 @@ class Filter:
 
 class NegatedFilter(Filter):
     """
-    Wraps an other filter and negates it
+    Wraps another filter and negates it
     """
 
     def __init__(self, wrapped_filter: Filter):
@@ -44,7 +44,7 @@ class SceneFilter(Filter):
         self.scene_ids = scene_ids
 
     def evaluate(self, image_info: ImageInformation):
-        return image_info.sequence.id in self.scene_ids
+        return image_info.sequence.sid in self.scene_ids
 
 
 class HasKeypointFilter(Filter):
