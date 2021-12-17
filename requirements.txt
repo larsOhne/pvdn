@@ -7,3 +7,4 @@ tensorboardX
 PyYAML
 tqdm
 scikit-learn
+matplotlib
