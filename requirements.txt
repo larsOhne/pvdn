@@ -17,6 +17,7 @@ scikit-image==0.18.1
 sklearn==0.0
 scipy==1.6.1
 setuptools~=45.2.0
+torch==1.7.1
 tensorboard-plugin-wit==1.8.0
 tensorboard==2.4.1
 tensorboardX==2.1
