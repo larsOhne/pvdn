@@ -9,10 +9,10 @@ RUN apt update && apt install -y sudo cmake g++ wget unzip python3-pip python3-d
     python-dev python3-venv \
     ffmpeg libsm6 libxext6 git
 
-COPY . $HOME/pvdn
-WORKDIR $HOME/pvdn
+# COPY . $HOME/pvdn
+# WORKDIR $HOME/pvdn
 
 RUN pip3 install --upgrade pip && \
-    pip3 install -e . && \
-    cd pvdn/detection/utils && \
-    g++ -fpic -shared -o image_operations.so image_operations.cpp HeadLampObject.cpp
+    pip3 install git+https://github.com/larsOhne/pvdn.git
+    # cd pvdn/detection/utils && \
+    # g++ -fpic -shared -o image_operations.so image_operations.cpp HeadLampObject.cpp
