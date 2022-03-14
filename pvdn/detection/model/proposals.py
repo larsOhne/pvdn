@@ -86,7 +86,7 @@ class DynamicBlobDetector(Cblob, Detector):
     def from_yaml(path: str):
         """ read input parameters for the DynamicBlobDetector from .yaml file """
         with open(path, 'r') as stream:
-            file = yaml.load(stream)['DynamicBlobDetector']
+            file = yaml.load(stream, yaml.FullLoader)['DynamicBlobDetector']
         return DynamicBlobDetector(k=file['k'], w=file['w'],
                                    dev_thresh=file['dev_thresh'],
                                    nms_distance=file['nms_distance'],
