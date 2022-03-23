@@ -176,17 +176,7 @@ python3 train.py --weights yolov5s.pt --data /data/yolo_day/pvdn.yaml --img-size
 python3 train.py --weights yolov5x.pt --data /data/yolo_day/pvdn.yaml --img-size 960 --hyp data/hyp.finetune.yaml --single-cls --workers 8 --name pvdn_yolov5x --batch-size 16 --epochs 200
 ```
 
-You can also download the pretrained weights:
-
-*YoloV5s*
-```
-gdown https://drive.google.com/uc\?id\=1kEe8drF5mdrgQnBtTOIbp9RyZy6JO0Hv
-```
-
-*YoloV5x*
-```
-gdown https://drive.google.com/uc\?id\=1cxtS2aqQlOQi6lkZVaiTG2sRarAZX1r-
-```
+You can also download the pretrained weights from [this link](https://drive.google.com/drive/folders/1vDWoNw5ts0_ydX4jJ4beEoFU6leqrJPV?usp=sharing).
 
 You can use the test script as follows. Note that you can either use the resulted 
 weights from your own training or the ones you downloaded. In this example we will 
