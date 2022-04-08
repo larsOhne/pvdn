@@ -23,9 +23,7 @@ docker run -it --rm  -v <path_to_dataset>:/dataset pvdn
 You will initially be located in the base directory of the pvdn package and your dataset directory will also be mounted
 into the container.
 
-Note: If for some reason you do not want to use the Docker environment, keep in mind that you need to have OpenCV
-installed **and** manually compile  `image_operations.cpp` using the
-command `g++ -fpic -shared -o image_operations.so image_operations.cpp HeadLampObject.cpp`. Also, the project needs to
+Note: If for some reason you do not want to use the Docker environment, keep in mind that the project needs to
 be installed as a package in order to ensure proper linking between the different modules.
 
 ## Creating the bounding box annotations
@@ -55,7 +53,7 @@ This will automatically create a folder bounding_boxes in the day/train/labels d
 
 Note that you can also change the parameters in the BloDetectorParameters.yaml file 
 in order to get a different behavior. The default parameters given here are the 
-ones to reproduce the results stated in the IROS paper.
+ones to reproduce the results stated in the [IROS paper](https://ieeexplore.ieee.org/abstract/document/9636162?casa_token=ssjoAGK3j5YAAAAA:BGvMEDmm11IUOuylGRecXOZ_yfGqTIgOFCwVapEP3xkpe7MXlDNFP75IT8mNOrvVZsjClWgfJe8XDg). The parameters in [BestBlobDetectorParameters.yaml](BestBlobDetectorParameters.yaml) are the ones to create the results from our [recent preprint paper](https://arxiv.org/abs/2107.11302).
 
 ## Training the model
 In order to train the model, simply navigate into the detection directory and run the `train.py` script:
@@ -92,12 +90,12 @@ In order to save the prediction results also in the coco format, use the `--save
 IROS2021 paper. 
 This is because after publication a small bug was found which secretly downsized 
 the images. The bug has now been fixed and the image size stated here is the one 
-which actually has been used in the IROS2021 publication.
+which actually has been used in the IROS2021 publication. If you want to use the weights of the model presented in our recent [preprint paper](https://arxiv.org/abs/2107.11302), you can use `--model_path weights_pretrained_optimized.pt`. Note that for that you should also have generated the bounding boxes with the proper parameters.
 
 | Source | Image Size (WxH) |Precision | Recall | F1-Score | q | qk | qb |
 | ------ | :-------: | :-------: | :----: | :------: | :-: | :-: | :-: |
 | IROS 2021 | 640x490 | 0.91 | 0.51 | 0.66 | 0.40 | 0.40 +- 0.21 | 1.00 -+ 0.00 |
-| This repo | 345x240 | 0.54 | 0.67 | 0.40 | 0.40 +- 0.22 | 1.00 -+ 0.00 |
+| This repo | 345x240 | 0.88 | 0.54 | 0.67 | 0.40 | 0.40 +- 0.22 | 1.00 -+ 0.00 |
 
 ## Evaluating runtime and computational requirements
 
@@ -147,8 +145,8 @@ img_size*.
 
 Once you converted the file structure you can use the train and test scripts 
 provided in the 
-original YoloV5 implementation [here](https://github.com/ultralytics/yolov5). We
-tested our code with the version **v5.0** and the commit `6187edcb53eb7982a23c5b0d3f1ab35d5d906ba6`.
+original YoloV5 implementation [here](https://github.com/ultralytics/yolov5). For the [IROS 2021 publication](https://ieeexplore.ieee.org/abstract/document/9636162?casa_token=ssjoAGK3j5YAAAAA:BGvMEDmm11IUOuylGRecXOZ_yfGqTIgOFCwVapEP3xkpe7MXlDNFP75IT8mNOrvVZsjClWgfJe8XDg), we
+tested our code with the version **v5.0** and the commit `6187edcb53eb7982a23c5b0d3f1ab35d5d906ba6`. For the [preprint paper](https://arxiv.org/abs/2107.11302), we tested our code with the commit `b83e1a4adcf77ccafa72b22ade6cb3898ccb0e05`.
 
 ```
 git clone https://github.com/ultralytics/yolov5.git ~/yolov5
@@ -176,7 +174,7 @@ python3 train.py --weights yolov5s.pt --data /data/yolo_day/pvdn.yaml --img-size
 python3 train.py --weights yolov5x.pt --data /data/yolo_day/pvdn.yaml --img-size 960 --hyp data/hyp.finetune.yaml --single-cls --workers 8 --name pvdn_yolov5x --batch-size 16 --epochs 200
 ```
 
-You can also download the pretrained weights from [this link for the results presented at IROS 2021](https://drive.google.com/drive/folders/1d1esRWFAElwNN8lqWvr_nec1trPyE1sY?usp=sharing) or from [this link for the results presented at the Springer Autonomous Robots Journal](https://drive.google.com/drive/folders/14feB0pvcDGX523m_bPMlYWpgKBnQs5pT?usp=sharing).
+You can also download the pretrained weights from [this link](https://drive.google.com/drive/folders/1d1esRWFAElwNN8lqWvr_nec1trPyE1sY?usp=sharing) for the [results presented at IROS 2021](https://ieeexplore.ieee.org/abstract/document/9636162?casa_token=ssjoAGK3j5YAAAAA:BGvMEDmm11IUOuylGRecXOZ_yfGqTIgOFCwVapEP3xkpe7MXlDNFP75IT8mNOrvVZsjClWgfJe8XDg) or from [this link](https://drive.google.com/drive/folders/14feB0pvcDGX523m_bPMlYWpgKBnQs5pT?usp=sharing) for the results presented in [this preprint paper](https://arxiv.org/abs/2107.11302).
 
 You can use the test script as follows. Note that you can either use the resulted 
 weights from your own training or the ones you downloaded. In this example we will 
