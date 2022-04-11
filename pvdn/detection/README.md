@@ -96,7 +96,7 @@ The first row of the table shows the results reported at IROS 2021 with the **ac
 
 | Source | Image Size (WxH) |Precision | Recall | F1-Score | q | qk | qb |
 | ------ | :-------: | :-------: | :----: | :------: | :-: | :-: | :-: |
-| IROS 2021 (actual image size) | 345x240 | 0.88 | 0.54 | 0.67 | 0.40 | 0.40 +- 0.22 | 1.00 -+ 0.00 |
+| IROS 2021 (actual image size) | 345x240 | 0.88 | 0.54 | 0.67 | 0.40 | 0.40 +- 0.21 | 1.00 -+ 0.00 |
 | IROS 2021 (reported image size) | 640x480 | 0.90 | 0.64 | 0.75 | 0.48 | 0.48 +- 0.26 | 1.00 -+ 0.00 |
 
 ## Evaluating runtime and computational requirements
