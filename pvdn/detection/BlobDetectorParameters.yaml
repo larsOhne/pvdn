@@ -4,5 +4,5 @@ DynamicBlobDetector:
   padding: 5
   dev_thresh: 0.005
   nms_distance: 13
-  small_scale: !!python/tuple [ 345, 240 ] # Leave empty if None
+  small_scale: !!python/tuple [ 640, 480 ] # Leave empty if None
   considered_region: !!python/tuple [ null, null, null, null ] # Leave empty if None
