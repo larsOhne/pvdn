@@ -92,10 +92,12 @@ This is because after publication a small bug was found which secretly downsized
 the images. The bug has now been fixed and the image size stated here is the one 
 which actually has been used in the IROS2021 publication. If you want to use the weights of the model presented in our recent [preprint paper](https://arxiv.org/abs/2107.11302), you can use `--model_path weights_pretrained_optimized.pt`. Note that for that you should also have generated the bounding boxes with the proper parameters.
 
+The first row of the table shows the results reported at IROS 2021 with the **actual image size**. The second row shows the results you would achieve if you use the image size actually reported in IROS 2021. If you use the parameters in [BlobDetectorParameters.yaml](BlobDetectorParameters.yaml) you get the results stated in the second row. If you want to reproduce the performance stated in the original IROS 2021 paper, you have to adjust the image size in [BlobDetectorParameters.yaml](BlobDetectorParameters.yaml) to `345x240`.
+
 | Source | Image Size (WxH) |Precision | Recall | F1-Score | q | qk | qb |
 | ------ | :-------: | :-------: | :----: | :------: | :-: | :-: | :-: |
-| IROS 2021 | 640x490 | 0.91 | 0.51 | 0.66 | 0.40 | 0.40 +- 0.21 | 1.00 -+ 0.00 |
-| This repo | 345x240 | 0.88 | 0.54 | 0.67 | 0.40 | 0.40 +- 0.22 | 1.00 -+ 0.00 |
+| IROS 2021 (actual image size) | 345x240 | 0.88 | 0.54 | 0.67 | 0.40 | 0.40 +- 0.22 | 1.00 -+ 0.00 |
+| IROS 2021 (reported image size) | 640x480 | 0.91 | 0.51 | 0.66 | 0.40 | 0.40 +- 0.21 | 1.00 -+ 0.00 |
 
 ## Evaluating runtime and computational requirements
 
