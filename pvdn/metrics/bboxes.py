@@ -207,8 +207,7 @@ class BoundingBoxEvaluator():
         For a detailed explanation of the metrics please read
             https://arxiv.org/abs/2105.13236
         """
-        self._total_scores = {"tps": 0, "boxes": 0, "kps": 0, "fps": 0,
-                              "fns": 0}
+        self._total_scores = {"tps": 0, "fps": 0, "fns": 0}
 
         if self._predictions is None:
             raise ValueError(
@@ -231,42 +230,17 @@ class BoundingBoxEvaluator():
                                  "box metrics"):
             kps = np.array(kps)
 
-            img_scores = {"tps": 0, "boxes": 0, "kps": 0, "fps": 0, "fns": 0}
-
             if str(id) in filtered_predictions.keys():
                 pred_boxes = np.array(filtered_predictions[str(id)])
             else:
                 pred_boxes = []
                 no_key_counter += 1
 
-            # first check every box
-            # penalize if one box contains more than one kp
-            for box in pred_boxes:
-                nbr_kps_in_box = self._get_nbr_of_kps_in_box(box=box, kps=kps)
+            img_scores, kp_quality, box_quality = \
+                self.evaluate_single_image(kps, pred_boxes)
 
-                # if there is no kp in the box it is a false positive, otherwise true positive
-                if nbr_kps_in_box == 0:
-                    img_scores["fps"] += 1
-                else:
-                    # goal: exactly one kp in each box
-                    # box quality is lower the more kps there are in one box
-                    kp_quality_hist.append(1 / nbr_kps_in_box)
-
-            # second check every kp
-            # penalize if one kp lies in several boxes
-            for kp in kps:
-                nbr_boxes_containing_kp = self._get_nbr_of_boxes_containing_kp(
-                    kp=kp,
-                    boxes=pred_boxes)
-
-                # if there is no box containing the kp it is a false negative
-                if nbr_boxes_containing_kp == 0:
-                    img_scores["fns"] += 1
-                else:
-                    img_scores["tps"] += 1
-                    # goal: each kp lies in only one box
-                    # quality is lower the more boxes the kp lies in
-                    box_quality_hist.append(1 / nbr_boxes_containing_kp)
+            kp_quality_hist += kp_quality
+            box_quality_hist += box_quality
 
             self._total_scores = {k: v + self._total_scores[k] for k, v in
                                   img_scores.items()}
@@ -321,7 +295,59 @@ class BoundingBoxEvaluator():
                 "box_quality": box_quality_combined, "qk": kp_quality, "qk_std":
                     kp_quality_std, "qb": box_quality,
                 "qb_std": box_quality_std}
+    
+    @staticmethod
+    def evaluate_single_image(kps: np.ndarray, pred_boxes):
+        """
+        Calculates metrics for a list of keypoints and predicted bounding boxes for 
+            an image.
+        :param kps: numpy array of shape [num_keypoints, 2] containing the groundtruth 
+            keypoint coordinates as [x, y].
+        :param pred_boxes: numpy array of shape [num_boxes, 4] containing the 
+            predicted bounding boxes to be evaluated as [x1, y1, x2, y2].
+        :return:
+            img_scores: dict containing
+                "tps": (int) true positives
+                "fps": (int) false positives
+                "fns": (int) false negatives
 
+            kp_quality: list of quality measures 1
+
+            box_qualtiy: list of quality measures 2
+        """
+        img_scores = {"tps": 0, "fps": 0, "fns": 0}
+        kp_quality, box_quality = [], []
+
+        for box in pred_boxes:
+            nbr_kps_in_box = BoundingBoxEvaluator._get_nbr_of_kps_in_box(box=box, 
+                                                                         kps=kps)
+
+            # if there is no kp in the box it is a false positive, otherwise true positive
+            if nbr_kps_in_box == 0:
+                img_scores["fps"] += 1
+            else:
+                # goal: exactly one kp in each box
+                # box quality is lower the more kps there are in one box
+                kp_quality.append(1 / nbr_kps_in_box)
+
+        # second check every kp
+        # penalize if one kp lies in several boxes
+        for kp in kps:
+            nbr_boxes_containing_kp = \
+                BoundingBoxEvaluator._get_nbr_of_boxes_containing_kp(
+                    kp=kp,boxes=pred_boxes
+                )
+
+            # if there is no box containing the kp it is a false negative
+            if nbr_boxes_containing_kp == 0:
+                img_scores["fns"] += 1
+            else:
+                img_scores["tps"] += 1
+                # goal: each kp lies in only one box
+                # quality is lower the more boxes the kp lies in
+                box_quality.append(1 / nbr_boxes_containing_kp)
+        
+        return img_scores, kp_quality, box_quality
 
 def evaluate_single(src, dataset_path):
     evaluator = BoundingBoxEvaluator(data_dir=dataset_path)
@@ -462,12 +488,3 @@ def find_best(src, file_pattern, dataset_path):
         evaluator.load_results_from_file(best[k]["model"])
         evaluator.evaluate(verbose=True)
         print()
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--result_file", type=str,
-                        help=".json file containing the results.")
-    parser.add_argument("--dataset_path", type=str,
-                        help="Path to the dataset split.")
-    args = parser.parse_args()

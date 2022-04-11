@@ -1,5 +1,4 @@
-//#include "python3.8/Python.h"
-#include "python2.7/Python.h"
+#include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "math.h"

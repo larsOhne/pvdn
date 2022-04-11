@@ -101,7 +101,7 @@ def swap_file_structure(target_dir: str, source_dir: str, img_size: int = 960):
                 if len(annot["labels"]) > 0:
                     with open(os.path.join(target_path, yolo_file), "w") as f:
                         for box, label in zip(annot["bounding_boxes"], annot["labels"]):
-                            box = np.array(box)
+                            box = np.array(box, dtype=float)
                             new_box = box.copy()
                             new_box[:2] += (box[2:] - box[:2]) / 2
                             new_box[2:] -= box[:2]
@@ -121,10 +121,10 @@ def swap_file_structure(target_dir: str, source_dir: str, img_size: int = 960):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-source_dir", type=str, help="Source dir of the EODAN dataset",
-                        default="/raid/Datasets/EODAN/kaggle/day")
+                        default="/home/lukas/Development/datasets/PVDN/day")
     parser.add_argument("-target_dir", type=str, help="Target dir of the new Yolo format "
-                        "dataset.", default="/raid/Datasets/EODAN/yolo/day")
-    parser.add_argument("-img_size", type=int, help="Final yolo image size (image will be square).")
+                        "dataset.", default="/home/lukas/Development/datasets/PVDN_yolo/day")
+    parser.add_argument("-img_size", type=int, help="Final yolo image size (image will be square).", default=960)
     args = parser.parse_args()
 
     swap_file_structure(source_dir=args.source_dir, target_dir=args.target_dir)
