@@ -14,7 +14,7 @@ ptflops==0.6.6
 pyarrow
 python_papi==5.5.1.5
 scikit-image
-sklearn
+scikit-learn
 scipy
 setuptools~=45.2.0
 torch==1.7.1
