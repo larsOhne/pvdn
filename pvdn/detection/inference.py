@@ -16,23 +16,28 @@ from pvdn.detection.utils.misc import crop_bboxes
 
 
 class Runner:
-    def __init__(self, yaml: str, weights: str, input_size: tuple,
+    def __init__(self, yaml: str, weights: str,
                  device: str = "cuda", bbox_size: tuple = (64, 64)):
         """
-        TODO: docstring
+        :param yaml: path to the blob detector config (.yaml)
+        :param weights: path to the model weights (.pt or .pth)
+        :param device: 'cuda' or 'cpu'
+        :param bbox_size: Size of the bounding boxes used for classification (height, width)
         """
         # setup blob detector
         self.detector = DynamicBlobDetector.from_yaml(yaml)
 
         # setup model
         self.model = Classifier()
-        self.model.load_state_dict(torch.load(weights))
+        weights = torch.load(weights, map_location=device)
+        if type(weights) == dict:
+            weights = weights["model"]
+        self.model.load_state_dict(weights)
         self.model = self.model.to(device)
 
         # further parameters
         self.device = device
         self.bbox_size = bbox_size
-        self.input_size = input_size
 
         self.model_flops, self.model_params = self.analyze_model(
             self.model, (1, self.bbox_size[0], self.bbox_size[1])
@@ -128,8 +133,7 @@ def analyze_performance(data: str, yaml: str, weights: str, device: str = "cuda"
 
     dataset = PVDNDataset(path=data)
     input_size = tuple(dataset[0][0].shape)
-    pipeline = Runner(yaml=yaml, weights=weights, device=device, bbox_size=bbox_size,
-                      input_size=input_size)
+    pipeline = Runner(yaml=yaml, weights=weights, device=device, bbox_size=bbox_size)
 
     model_hist = {
         "flops": [],
