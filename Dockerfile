@@ -26,3 +26,4 @@ WORKDIR /source
 
 # Install package
 RUN pip install --no-cache-dir --no-warn-script-location -e .
+RUN python -m unittest discover -s tests -p "*.py"
